@@ -15,5 +15,9 @@
   "bugs": {
     "url": "https://github.com/Refyled/cellServer/issues"
   },
-  "homepage": "https://github.com/Refyled/cellServer#readme"
+  "homepage": "https://github.com/Refyled/cellServer#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0"
+  }
 }
