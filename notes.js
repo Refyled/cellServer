@@ -3,12 +3,7 @@ let __ = require('@opeltre/lolo'),
 
 let calc = {}; 
 /*  
-    Move = { 
-        start   : Pos
-        end     : Pos
-        weight  : Int
-        player  : String
-    }
+    Move = (Cell, Cell) 
 
     Cell = {
         pos     : Pos
@@ -28,15 +23,19 @@ let moves = [
     }
 ]; 
 
+let transition = [{ 
+    start:      [x0, y0],
+    end:        [x2, y2],
+    weights:    [w0, w1, w2],
+    player:     "a"
+}];
+
 //  groupBy : (a -> String) -> [a] -> { [a] } 
 let groupBy = f => xs => {
     let zs = {}; 
     xs.forEach(x => zs[f(x)].push(x));
     return zs
 };
-
-//  sortBy : (a -> a -> Bool) -> [a] -> [(a, Int)]
-let sortBy = (
 
 //  randKey : {a} -> String
 let randKey = as => {
@@ -63,7 +62,7 @@ let halfMoves = m => {
     }];
 }
 
-//  merge : Moves -> (Moves, Moves) 
+//  merge : Moves -> (Transition, State)  
 /*
         M    =     M2     .    M1 
                 /      \    /     \            
@@ -105,10 +104,14 @@ let merge = moves => {
 */
 let mergeNode = (cells, pos) => {
 
-    let weightsByPlayer = __.pipe(
-        groupBy(c => c.player), 
-        _r.map(cs => cs.reduce((c, w) => w + c.weight, 0))
+    let cellsByPlayer = __.pipe(
+        groupBy(c => c.player),
+        _r.map(cs => cs.sort((a, b) => a.weight >= b.weight ? 1 : -1))
     )(cells); 
+
+    let weightsByPlayer = _r.map(
+        cs => cs.reduce((c, w) => w + c.weight, 0)
+    )(cellsByPlayer);
 
     let [maxWeight, totalWeight] = _r.reduce(
         (wi, [max, tot]) => [wi > W ? wi : W, wi + W]
@@ -117,20 +120,15 @@ let mergeNode = (cells, pos) => {
 
     let winner = __.pipe(
         _r.filter((w, p) => w === maxWeight && p !== 'vit'),
-        randKey
+        randKey,
+        player => cellsByPlayer[player][0]
     )(weightsByPlayer);
 
-    return {
-        pos:    JSON.parse(pos), 
-        player: winner,
-        weight: totalWeight
-    }; 
-}
-
+    return _r.set('weight', totalWeight)(winner);
+}; 
 
 //  start : Moves -> State
 let start = moves => moves.reduce(
-
 
 let groupBy = (xs, id) => xs.reduce(
     (x, acc) => State.set(id(x), [...acc[id(x)], x]), 
