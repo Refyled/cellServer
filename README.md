@@ -13,7 +13,7 @@ we introduce the following type constructors:
 
 For instance, vertices of type `(Int, Int)` on the 2D-lattice 
 may be mapped to keys by `JSON.stringify`. 
-Directed edges, subtype `(Vertex, Vertex)` may be similarly stringified, 
+Directed edges, subtype of `(Vertex, Vertex)` may be similarly stringified, 
 although different representations might be chosen. 
 
 ## States
@@ -26,7 +26,7 @@ for each player, i.e.
 
     State = Player > Vertex > Int 
 
-letting `Player` denote the union type of players,  
+letting `Player` denote the union type of players,
 and `Player > a` the subtype of `{a}` whose keys are players. 
 
 ## Moves
@@ -54,10 +54,14 @@ or chosen randomly along the cells of maximal weight.
 
 Cells may first cross along an edge. 
 Eaten cells do not reach the end of the edge. 
+A new object of type `Move` is hence first computed 
+to account for crossings happening on edges. 
 
 Cells may then meet on a vertex. 
 Cells owned by the same player merge before 
 the surviving cell eats the others. 
+The next object of type `State` is finally computed 
+to describe the weights remaining on all nodes. 
 
 ## Transitions 
 
