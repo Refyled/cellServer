@@ -1,15 +1,22 @@
 # Cell Server 
 
+## Graph Data   
+
 Two subtypes `Vertex` and `Edge` of `String` are assumed 
 to label the graph vertices and edges. 
 
 To represent functions on vertices and edges valued in `a`,
 we introduce the following type constructors: 
 
-    - `Vertex > a`  subtype of `{a}` indexed by vertex keys
-    - `Edge > a`    subtype of `{a}` indexed by edge keys 
+- `Vertex > a`  subtype of `{a}` indexed by vertex keys
+- `Edge > a`    subtype of `{a}` indexed by edge keys 
 
-## Cell States
+For instance, vertices of type `(Int, Int)` on the 2D-lattice 
+may be mapped to keys by `JSON.stringify`. 
+Directed edges, subtype `(Vertex, Vertex)` may be similarly stringified, 
+although different representations might be chosen. 
+
+## States
 
 Each player owns a collection of cells living on the vertices 
 of the graph, each cell carrying an weight integer. 
@@ -19,9 +26,10 @@ for each player, i.e.
 
     State = Player > Vertex > Int 
 
-letting `Player` denote the union type of players. 
+letting `Player` denote the union type of players,  
+and `Player > a` the subtype of `{a}` whose keys are players. 
 
-## Cell Moves
+## Moves
 
 At each time step, cells may move along the graph edges. 
 Cells with a weight larger than one may divide into smaller cells 
