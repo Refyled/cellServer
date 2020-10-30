@@ -30,16 +30,18 @@ let reaching = __.pipe(
 
 
 //  groupBy : (a -> String) -> {a} -> {{a}} 
-let groupBy = key => rec => 
-    _r.reduce(
-        (el, acc, i) => _r.set(i, el)(acc[key(el, i)] || {})
-        {}
-    )(rec); 
+let groupBy = key => elems => {
+    let groups = {}; 
+    _r.forEach((ei, i) => {
+        groups[key(ei, i)] = _r.set(i, ei)(groups[key(ei, i)] || {});
+    })(elems);  
+    return groups;
+};
 
 //  degroup : {{a}} -> {a} 
 let degroup = groups => 
     _r.reduce(
-        (rec, acc, i) => _r.assign(rec, acc),
+        (group, elems, i) => _r.assign(group)(elems),
         {}
     )(groups); 
 
