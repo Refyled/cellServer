@@ -120,20 +120,20 @@ let mergeBy = property => __.pipe(
 
 //  crossing : (Edge > Cell) -> (Edge > Cell) 
 let crossing = 
-    mergeBy((cell, edge) => Graph.symEdge(edge)); 
+    mergeBy((cell, edge) => sym(edge)); 
 
 /*  Merge cells reaching the same node */
 
 //  reaching : (Edge > Cell) -> (Edge > Cell) 
 let reaching = 
-    mergeBy((cell, edge) => Graph.endpoint(edge));
+    mergeBy((cell, edge) => target(edge));
 
 /*  Return the successive weights of cells running through edges */
 
-//  transitions : (Edge > Cell) -> (Edge > (Player, [Int]))
-let transitions = move => {
+//  transition : (Edge > Cell) -> (Edge > (Player, [Int]))
+let transition = move => {
     let m1 = crossing(move),
-        m2 = reaching(move); 
+        m2 = reaching(m1); 
     return _r.map(
         (cell, edge) => [getPlayer(cell), [
             getWeight(cell),
@@ -150,5 +150,8 @@ module.exports = {
     degroup,
     mergeGroup,
     merge,
-    mergeBy
+    mergeBy,
+    crossing,
+    reaching,
+    transition
 }; 
