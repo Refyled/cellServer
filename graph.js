@@ -36,17 +36,17 @@ let lattice = (X, Y) => {
 
     //.getVertices : () -> [Vertex]
     my.getVertices = () => __.range(X)
-        .map(x => __.range(Y).map(y => [x, y]))
-        .map(pos => pos.join(':'));
+        .map(x => __.range(Y).map(y => [x, y].join(':')))
+        .reduce((as, bs) => [...as, ...bs]);
 
     //.isVertex : String -> Bool
     my.isVertex = vertex => {
         let fmt = /\d*:\d*/;
-        if (!fmt.exec(edge))
+        if (!fmt.exec(vertex))
             return false;
         let [x, y] = vertex.split(':')
             .map(n => +n);
-        return 0 < x && x < X && 0 < y && y < Y;
+        return 0 <= x && x < X && 0 <= y && y < Y;
     };
 
     //--- Edges: "x0:y0 > x1:y1" ---
@@ -68,15 +68,15 @@ let lattice = (X, Y) => {
             || (y0 === y1 && Math.abs(x1 - x0) === 1);
     };
 
-    //.source : Edge -> Vertex
-    my.source : edge => edge.split(' > ')[0];
+    //.edgeSource : Edge -> Vertex
+    my.edgeSource = edge => edge.split(' > ')[0];
 
-    //.target : Edge -> Vertex
-    my.source = edge -> edge.split(' > ')[1];
+    //.edgeTarget : Edge -> Vertex
+    my.edgeTarget = edge => edge.split(' > ')[1];
 
     //--- SymEdges: "x0:y0 - x1:y1" ---
     
-    my.symEdge = edge => edge.split(' > ').sort().join(' - ');
+    my.edgeSym = edge => edge.split(' > ').sort().join(' - ');
 
     return my; 
 };
