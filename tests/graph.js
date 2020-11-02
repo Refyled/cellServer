@@ -26,6 +26,12 @@ exports.isEdge = () => {
     return test(expect, obtain);
 };
 
+exports.vertexEdge = () => {
+    let expect = '1:1 > 1:1',
+        obtain = G.vertexEdge('1:1');
+    return test(expect, obtain);
+};
+
 exports.edgeSource = () => {
     let expect = '2:2', 
         obtain = G.edgeSource('2:2 > 1:2');
