@@ -1,4 +1,5 @@
 let __ = require('lolo'),
+    _r = __.r,
     test = require('@opeltre/testo');
 
 let graph = require('../graph').lattice(3, 3),
@@ -66,3 +67,14 @@ exports.legalise = () => {
     return test(expect, obtain);
 };
 
+exports.addVitamins = () => {
+    let state = {
+        '0:0': ['a', 4],
+        '0:1': ['b', 2]
+    }; 
+    let expect = _r.assign(state)(
+        _r.compute(v => ['*', 1])(graph.getVertices())
+    );
+    let obtain = game.addVitamins(7)(state);
+    return test(expect, obtain);
+};

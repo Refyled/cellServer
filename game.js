@@ -63,6 +63,19 @@ let randKey = as => {
     return ks[n];
 }; 
 
+/*  Randomly select N elements in an array */
+
+//  randElements : Int -> [a] -> [a] 
+let randElements = N => as => {
+    if (N === 0) 
+        return [];
+    let i = Math.floor(Math.random() * as.length);
+    return [as[i], ...randElements(N-1)([
+        ...as.slice(0, i), 
+        ...as.slice(i+1, as.length)
+    ])];
+};
+
 
 //------ Merging Cells ------ 
 
@@ -119,6 +132,8 @@ function Game (graph) {
 
     let my = {}; 
 
+    //------ Merging Cells ------ 
+
     /* Merge cells crossing the same edge */
 
     //.crossing : (Edge > Cell) -> (Edge > Cell) 
@@ -173,20 +188,26 @@ function Game (graph) {
     /* Legalise moves w.r.t. given state and graph structure */
 
     //.legalise : (Vertex > Cell) -> (Edge > Cell) -> (Edge > Cell)
-    my.legalise = state => moves => {
+    my.legalise = state => moves => 
         __.pipe(
             groupBy((c, e) => graph.edgeSource(e)),
             groups => _r.assign(groups)(_r.map(() => ({}))(state)),
             _r.map((cs, v) => state[v] ? acceptMoves(state[v], v)(cs) : {}),
             degroup
         )(moves); 
+
+
+    //------ Spawn Vitamins ------ 
     
-    //.addVitamins : (Vertex > Cell) -> (Vertex > Cell)
+    //.addVitamins : Int -> (Vertex > Cell) -> (Vertex > Cell)
     my.addVitamins = n => state => {
-
-
-
-    }
+        let free = graph.getVertices()
+            .filter(v => !state[v]);
+        let nVit = Math.min(n, free.length),
+            positions = randElements(nVit)(free),
+            vits = _r.compute(pos => newVitamin(1))(positions);
+        return _r.assign(vits)(state);
+    };
 
     return my;
 }
