@@ -1,6 +1,8 @@
-let game = require('../game'),
-    __ = require('lolo'),
+let __ = require('lolo'),
     test = require('@opeltre/testo');
+
+let graph = require('../graph').lattice(3, 3),
+    game = require('../game')(graph);
 
 exports.crossing = () => {
     let expect = {
@@ -41,3 +43,26 @@ exports.transitions = () => {
     }); 
     return test(expect, obtain); 
 }
+
+exports.legalise = () => {
+    let state = {
+        '0:0': ['a', 4],
+        '0:1': ['b', 2],
+        '2:2': ['b', 5]
+    };
+    let expect = {
+        '0:0 > 1:0': ['a', 3],
+        '0:0 > 0:0': ['a', 1],
+        '0:1 > 0:2': ['b', 1],
+        '0:1 > 1:1': ['b', 1],
+        '2:2 > 2:2': ['b', 5]
+    };
+    let obtain = game.legalise(state)({
+        '0:0 > 1:0': ['a', 3],
+        '0:1 > 0:0': ['b', 3],
+        '0:1 > 0:2': ['b', 1],
+        '0:1 > 1:1': ['b', 1]
+    });
+    return test(expect, obtain);
+};
+

@@ -20,8 +20,8 @@ exports.isVertex = () => {
 }; 
 
 exports.isEdge = () => {
-    let expect = [true, false, false],
-        obtain = ['0:0 > 1:0', '0:0 > 1:1', '2:2 > 2:3']
+    let expect = [true, true, false, false],
+        obtain = ['0:0 > 1:0', '0:0 > 0:0', '0:0 > 1:1', '2:2 > 2:3']
         .map(G.isEdge);
     return test(expect, obtain);
 };

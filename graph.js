@@ -65,7 +65,8 @@ let lattice = (X, Y) => {
         let [x0, y0] = v0.split(':'),
             [x1, y1] = v1.split(':');
         return (x0 === x1 && Math.abs(y1 - y0) === 1) 
-            || (y0 === y1 && Math.abs(x1 - x0) === 1);
+            || (y0 === y1 && Math.abs(x1 - x0) === 1)
+            || (x0 === x1 && y0 === y1);
     };
 
     //.edgeSource : Edge -> Vertex
@@ -73,6 +74,9 @@ let lattice = (X, Y) => {
 
     //.edgeTarget : Edge -> Vertex
     my.edgeTarget = edge => edge.split(' > ')[1];
+
+    //.vertexEdge : Vertex -> Edge 
+    my.vertexEdge = vertex => vertex + ' > ' + vertex;
 
     //--- SymEdges: "x0:y0 - x1:y1" ---
     

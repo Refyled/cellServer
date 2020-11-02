@@ -10,6 +10,7 @@
 let __ = require('lolo'),
     _r = __.r;
 
+module.exports = Game;
 
 //------ Cell Operations ------
     
@@ -18,20 +19,18 @@ let __ = require('lolo'),
 //  getPlayer : Cell -> String
 let getPlayer = ([p, w]) => p;
 
-//  isVitamin : Cell -> Bool
-let isVitamin = c => getPlayer(c) === '*'; 
-
 //  getWeight : Cell -> Int
 let getWeight = ([p, w]) => w;
 
 //  setWeight : Int -> Cell -> Int
 let setWeight = w1 => ([p, w0]) => [p, w1]; 
 
-//------ Graph Operations ------ 
+//  isVitamin : Cell -> Bool
+let isVitamin = c => getPlayer(c) === '*'; 
 
-let source = e => e.split(' > ')[0],
-    target = e => e.split(' > ')[1],
-    sym = e => e.split(' > ').sort().join(' - ');
+//  newVitamin : Int -> Cell
+let newVitamin = w => ['*', w];
+
 
 //------ Record Operations ------
 
@@ -114,44 +113,80 @@ let mergeBy = property => __.pipe(
 ); 
 
 
-//------ Examples ------
+//====== Game Operations ======
 
-/*  Merge cells crossing the same edge */
+function Game (graph) {
 
-//  crossing : (Edge > Cell) -> (Edge > Cell) 
-let crossing = 
-    mergeBy((cell, edge) => sym(edge)); 
+    let my = {}; 
 
-/*  Merge cells reaching the same node */
+    /* Merge cells crossing the same edge */
 
-//  reaching : (Edge > Cell) -> (Edge > Cell) 
-let reaching = 
-    mergeBy((cell, edge) => target(edge));
+    //.crossing : (Edge > Cell) -> (Edge > Cell) 
+    my.crossing = mergeBy((c, e) => graph.edgeSym(e)); 
 
-/*  Return the successive weights of cells running through edges */
+    /* Merge cells reaching the same node */
 
-//  transition : (Edge > Cell) -> (Edge > (Player, [Int]))
-let transition = move => {
-    let m1 = crossing(move),
-        m2 = reaching(m1); 
-    return _r.map(
-        (cell, edge) => [getPlayer(cell), [
-            getWeight(cell),
-            getWeight(m1[edge]),
-            getWeight(m2[edge])
-        ]]
-    )(move);
+    //.reaching : (Edge > Cell) -> (Edge > Cell) 
+    my.reaching = mergeBy((c, e) => graph.edgeTarget(e));
+
+    /* Return successive weights of cells running through edges */
+
+    //.transition : (Edge > Cell) -> (Edge > (Player, [Int]))
+    my.transition = move => {
+        let m1 = my.crossing(move),
+            m2 = my.reaching(m1); 
+        return _r.map(
+            (cell, edge) => [getPlayer(cell), [
+                getWeight(cell),
+                getWeight(m1[edge]),
+                getWeight(m2[edge])
+            ]]
+        )(move);
+    };
+
+
+    //------ Dividing Cells ------
+
+    /*  Allow child cells to move as long as mother has enough weight */
+
+    //  acceptMoves : (Cell, Vertex) -> (Edge > Cell) -> (Edge > Cell)
+    let acceptMoves = (cell, pos) => children => {
+
+        if (_r.isEmpty(children)) 
+            return getWeight(cell) !== 0
+                ? _r.set(graph.vertexEdge(pos), cell)({})
+                : {};
+
+        let popKey = _r.keys(children)[0],
+            child = children[popKey];
+        children = _r.without(popKey)(children);
+
+        let [W, wi] = [cell, child].map(getWeight),
+            [P, pi] = [cell, child].map(getPlayer);
+        return wi <= W && pi === P
+            ? _r.set(popKey, child)(
+                acceptMoves(setWeight(W - wi)(cell), pos)(children)
+            )
+            : acceptMoves(cell, pos)(children);
+    }
+
+    /* Legalise moves w.r.t. given state and graph structure */
+
+    //.legalise : (Vertex > Cell) -> (Edge > Cell) -> (Edge > Cell)
+    my.legalise = state => moves => {
+        __.pipe(
+            groupBy((c, e) => graph.edgeSource(e)),
+            groups => _r.assign(groups)(_r.map(() => ({}))(state)),
+            _r.map((cs, v) => state[v] ? acceptMoves(state[v], v)(cs) : {}),
+            degroup
+        )(moves); 
+    
+    //.addVitamins : (Vertex > Cell) -> (Vertex > Cell)
+    my.addVitamins = n => state => {
+
+
+
+    }
+
+    return my;
 }
-
-//------ Exports ------ 
-
-module.exports = {
-    groupBy,
-    degroup,
-    mergeGroup,
-    merge,
-    mergeBy,
-    crossing,
-    reaching,
-    transition
-}; 
