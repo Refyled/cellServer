@@ -86,6 +86,8 @@ let randElements = N => as => {
 
 //  mergeGroup : {Cell} -> {Cell} 
 let mergeGroup = cells => {
+    if (_r.keys(cells).length === 1) 
+        return cells;
     let [maxWeight, totalWeight] = __.pipe(
         _r.map(getWeight),
         _r.reduce(
@@ -223,6 +225,13 @@ function Game (graph) {
             vits = _r.compute(pos => newVitamin(1))(positions);
         return _r.assign(vits)(state);
     };
+    
+    //.addVitamins : (Vertex > Cell) -> Int
+    my.countVitamins = state => __.pipe(
+        _r.filter(isVitamin),
+        _r.keys,
+        ks => ks.length
+    )(state);
 
     
     //------ Spawn Players ------
@@ -234,9 +243,8 @@ function Game (graph) {
             .forEach((vi, i) => {
                 state[vi] = newCell(players[i], w0)
             });
-        return __.logs('st')(state);
+        return state;
     };
 
     return my;
 }
-

@@ -11,11 +11,13 @@ let graph = require('../graph').lattice(3, 3),
 exports.crossing = () => {
     let expect = {
         '0:0 > 0:1': ['a', 3],
-        '0:1 > 0:0': ['b', 0]
+        '0:1 > 0:0': ['b', 0],
+        '2:2 > 2:2': ['*', 1]
     };
     let obtain = game.crossing({
         '0:0 > 0:1': ['a', 2],
-        '0:1 > 0:0': ['b', 1]
+        '0:1 > 0:0': ['b', 1],
+        '2:2 > 2:2': ['*', 1]
     });
     return test(expect, obtain);
 } 
@@ -85,6 +87,21 @@ exports.legalise = () => {
     return test(expect, obtain);
 };
 
+exports.legaliseEmpty = () => {
+    let state = {
+        '0:0': ['a', 4],
+        '1:1': ['b', 3],
+        '2:2': ['*', 1]
+    };
+    let expect = {
+        '0:0 > 0:0': ['a', 4],
+        '1:1 > 1:1': ['b', 3],
+        '2:2 > 2:2': ['*', 1]
+    };
+    let obtain = game.legalise(state)({});
+    return test(expect, obtain);
+}
+
 exports.addVitamins = () => {
     let state = {
         '1:1': ['a', 4],
@@ -94,6 +111,16 @@ exports.addVitamins = () => {
         _r.compute(v => ['*', 1])(graph.getVertices())
     );
     let obtain = game.addVitamins(8)(state);
+    return test(expect, obtain);
+};
+
+exports.countVitamins = () => {
+    let expect = 2,
+        obtain = game.countVitamins({
+        '1:1': ['*', 1],
+        '2:2': ['a', 3],
+        '1:0': ['*', 1]
+    });
     return test(expect, obtain);
 };
 
