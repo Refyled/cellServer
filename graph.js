@@ -22,6 +22,8 @@ let __ = require('lolo');
         edgeTarget  : Edge -> Vertex
         edgeSym     : Edge -> SymEdge
 
+        initialVertices : Int -> [Vertex]
+
 *///------
 
 
@@ -30,7 +32,9 @@ let __ = require('lolo');
 //  lattice : (Int, Int) -> Graph
 let lattice = (X, Y) => {
 
-    let my = {}; 
+    let my = {
+        shape: [X, Y]
+    }; 
 
     //--- Vertices: "x:y" ---
 
@@ -81,6 +85,29 @@ let lattice = (X, Y) => {
     //--- SymEdges: "x0:y0 - x1:y1" ---
     
     my.edgeSym = edge => edge.split(' > ').sort().join(' - ');
+
+
+    //--- Initial positions evenly spaced on a box ---
+
+    //.initialVertices : Int -> [Vertex]
+    my.initialVertices = (nPlayers) => { 
+        let [x2, y2] = [X-1, Y-1].map(n => Math.floor(n/2)),
+            [x4, y4] = [X-1, Y-1].map(n => Math.floor(n/4));
+        let onBox = dL => {
+            if (dL <= x2) 
+                return [x4 + dL, y4];
+            if (dL - x2 <= y2)
+                return [x4 + x2, y4 + (dL - x2)];
+            if (dL - x2 - y2 <= x2) 
+                return [x4 + x2 - (dL - x2 - y2), y4 + y2];
+            else
+                return [x4, y4 + y2 - (dL - 2 * x2 - y2)];
+        };
+        return __.range(nPlayers)
+            .map(k => Math.floor(k * (X + Y - 2) / nPlayers))
+            .map(onBox)
+            .map(pos => pos.join(':'));
+    };
 
     return my; 
 };

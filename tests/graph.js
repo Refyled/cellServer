@@ -49,3 +49,11 @@ exports.edgeSym = () => {
         G.edgeSym('1:1 > 2:1') === G.edgeSym('2:1 > 1:1');
     return test(true, obtain);
 };
+
+let G2 = graph.lattice(5, 5); 
+
+exports.initialVertices = () => {
+    let expect = ['1:1', '3:1', '3:3', '1:3'],
+        obtain = G2.initialVertices(4);
+    return test(expect, obtain);
+};

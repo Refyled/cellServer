@@ -31,6 +31,9 @@ let isVitamin = c => getPlayer(c) === '*';
 //  newVitamin : Int -> Cell
 let newVitamin = w => ['*', w];
 
+//  newCell : (String, Int) -> Cell
+let newCell = (p, w) => [p, w];
+
 
 //------ Record Operations ------
 
@@ -159,6 +162,18 @@ function Game (graph) {
         )(move);
     };
 
+    /* Compute the final state from transitions */ 
+
+    //.final : (Edge > (Player, [Int])) -> (Vertex > Cell)
+    my.final = __.pipe(
+        _r.filter(([p, ws]) => ws[2] > 0),
+        _r.map(([p, ws]) => newCell(p, ws[2])),
+        _r.reduce(
+            (state, c, e) => _r.set(graph.edgeTarget(e), c)(state),
+            {}
+        )
+    );
+
 
     //------ Dividing Cells ------
 
@@ -209,5 +224,19 @@ function Game (graph) {
         return _r.assign(vits)(state);
     };
 
+    
+    //------ Spawn Players ------
+
+    //.addPlayers : ([String], Int) -> (Vertex > Cell)
+    my.addPlayers = (players, w0) => {
+        let state = {};
+        graph.initialVertices(players.length)
+            .forEach((vi, i) => {
+                state[vi] = newCell(players[i], w0)
+            });
+        return __.logs('st')(state);
+    };
+
     return my;
 }
+
