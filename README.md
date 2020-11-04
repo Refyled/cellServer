@@ -1,26 +1,27 @@
 # Game of Cells
 
 The game of cells is a game to be played by computers. 
+
 It consists of regular grid whose nodes may be either empty, 
 occupied by a 'cell' or a 'vitamin'. 
 Each cell belongs to a player and carries a certain weight. 
 
-Each cell may chose to stay in place or move along adjacent edges, 
-either as a whole or by dividing itself into cells of smaller weight. 
-
+Cells may chose to stay in place or move along adjacent edges, 
+either as a whole or by dividing into cells of smaller weight. 
 Once moves have been received, 
 the game of cells updates its state by merging cells 
 that cross along an edge or reach the same node. 
-Only one of the cells of heaviest weight survives after merging, 
-and inherits the total present weight. 
+
+Only one cell of heaviest weight survives after merging, 
+inheriting the total weight in presence. 
 Cells of a given player are always merged before conflicting 
 with extraneous cells.  
 
-The game of life differs from a classical
+The game of cells differs from a classical
 [cellular automaton](https://en.wikipedia.org/wiki/Cellular_automaton)
 in that it leaves cells with a freedom of choice before applying 
 its deterministic update rule. 
-One may therefore think of the game of cells as a "stochastic cellular automaton",
+One may therefore think of the game of cells as a stochastic cellular automaton,
 each player's choices being implemented as a stochastic transition function. 
 
 ## Usage 
@@ -34,7 +35,7 @@ $ node app.js
 
 A sample random player is found in 
 [player.js](https://github.com/opeltre/cellServer/blob/main/player.js). 
-To start a game, open two terminals, one for each player, and run in node: 
+To start a game, open two terminals and run in node: 
 
 ```js
 //--- tty1 ---
@@ -46,7 +47,7 @@ To start a game, open two terminals, one for each player, and run in node:
 > p2.login('eljew').join('aok');
 ``` 
 
-To watch the game, a sample view is found in 
+To watch the game from a terminal, use the sample view found in 
 [view.js](https://github.com/opeltre/cellServer/blob/main/view.js).
 
 ```
@@ -55,4 +56,4 @@ To watch the game, a sample view is found in
 > view.join('aok');
 ``` 
 
-Watch the cells move!
+Watch them move!
