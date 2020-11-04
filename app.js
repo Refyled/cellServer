@@ -110,8 +110,7 @@ io.on('connection', socket => {
             if (rooms[name]) {
                 rooms[name].watches(socket);
                 socket.emit('msg', `watching room "${name}"`);
-                __.logs(`\n\t(<>.<>) - - - > ${name}`) 
-
+                __.log(`\n (<>.<>) - - - > ${name}`) 
             } 
             else
                 socket.emit('msg', `room "${name}" does not exist`);

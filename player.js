@@ -23,7 +23,6 @@ let socket = io('http://localhost:3031')
 
 let my = {
     name : "",
-    socket
 }; 
 
 my.login = name => {

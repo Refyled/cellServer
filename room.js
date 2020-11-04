@@ -30,10 +30,12 @@ let defaults = {
     The room reacts to events of type:
         
         Event   = 'move'        Edge > Int 
+                | 'disconnect'  () 
 
     Emitting in response events of type:
 
         Emit    = 'settings'    Settings
+                | 'players'     [String] 
                 | 'state'       Vertex > Cell
                 | 'transition'  Edge > (Player, [Int])
 
@@ -74,6 +76,7 @@ let Room = settings => {
         } 
         //--- join
         socket.emit('settings', settings);
+        socket.emit('players', players.map(s => s.player));
         my.emit('msg', `> ${socket.player} joined`);
         players.push(socket);
         //--- send moves
@@ -95,6 +98,7 @@ let Room = settings => {
     my.watches = socket => {
         viewers.push(socket);
         socket.emit('settings', settings);
+        socket.emit('players', players.map(s => s.player));
         socket.on('disconnect', () => {
             viewers = viewers.filter(s => s.connected === true);
         });
@@ -155,8 +159,9 @@ let Room = settings => {
             )({});
         }
         //--- broadcast
-        my.emit('msg', '|> starting...');
-        my.emit('state', currentState);
+        my.emitAll('msg', '|> starting...');
+        my.emitAll('players', players.map(s => s.player));
+        my.emitAll('state', currentState);
         //--- loop
         my.loop(0);
     }
