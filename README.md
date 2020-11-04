@@ -50,7 +50,7 @@ To start a game, open two terminals and run in node:
 To watch the game from a terminal, use the sample view found in 
 [view.js](https://github.com/opeltre/cellServer/blob/main/view.js).
 
-```
+```js
 //--- tty3 ---
 > let view = require('./view');
 > view.join('aok');
