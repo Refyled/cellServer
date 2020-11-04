@@ -1,160 +1,130 @@
-const express = require('express');  
-const app = express();  
-const server = require('http').createServer(app);
-const calc = require('./calc.js');
-var events = require('events');
+let Room = require('./room'),
+    __ = require('lolo'),
+    _r = __.r;
 
-const port = 3001;
+let express = require('express'),
+    app = express(),
+    server = require('http').createServer(app),
+    io = require('socket.io')(server);
 
-app.use(express.static(__dirname + '/node_modules'));  
-app.get('/', function(req, res,next) {  
-    res.sendFile(__dirname + '/static/index.html');
+let port = 3031;
+
+app.use('static', express.static('static'));
+
+
+/*------ Cell Server ------ 
+
+    Manage rooms and players through sockets. 
+
+    The internal state of the server is of type:
+
+        Server = {
+            players: [String],
+            rooms:   {Room} 
+        };
+
+    Game handling is left to the room object.
+
+    Sockets may either:
+        - login as players (ai) 
+        - subscribe as a view (humans).
+
+    The server reacts to events of the following union type:
+
+        Event   = 'login'       String
+                | 'getRooms'    ()
+                | 'joinRoom'    String
+                | 'viewRoom'    String
+                | 'newRoom'     Settings
+
+    In response, the server emits events of type: 
+
+        Emit    = 'msg'         String
+                | 'rooms'       {RoomView}
+
+                | 'state'       Vertex > Cell
+                | 'transition'  Edge > (Player, [Int])
+
+    N.B. The 'state' and 'transition' events, destined to 
+    players and viewers respectively, are left to be handled 
+    by each room object. 
+
+*///------ 
+
+let players = [],
+    rooms = {}; 
+
+let viewRoom = r => 
+    _r.set('players', r.players.map(s => s.player))(r.settings);
+
+io.on('connection', socket => {
+
+        //--- set player name ---
+	socket.on('login', name => {
+            if (players.indexOf(name) > 0 || name === '*') 
+                socket.emit('msg', 'please use another name');
+            else if (socket.player) 
+                socket.emit('logged', `you are connected as ${socket.player}`)
+            else {
+                players.push(name);
+                socket.player = name;
+                socket.emit('msg', `logged in as ${name}`);
+                __.logs(`\n> player ${name} connected`)(players);
+            }
+        }); 
+        
+        //--- get open rooms ---
+        socket.on('getRooms', () => {
+             socket.emit('rooms', _r.map(viewRoom)(rooms)); 
+        }); 
+
+        //--- create a new room --- 
+        socket.on('newRoom', (name, settings) => {
+            if (!rooms[name]) {
+                rooms[name] = Room(settings);
+                socket.emit('msg', `room "${name}" created`);
+                __.logs(`\n+ new room "${name}" created`)
+                    (_r.map(viewRoom)(rooms));
+            } else {
+                socket.emit('msg', `room "${name}" exists`);
+            }
+        }); 
+        
+        //--- join a room --- 
+        socket.on('joinRoom', name => {
+            if (socket.player && rooms[name]) {
+                let joined = rooms[name].joins(socket);
+                if (joined)
+                    socket.emit('msg', `joined room ${name}`);
+                    __.logs(`\n===> ${socket.player} joined "${name}"`)
+                        (_r.map(viewRoom)(rooms));
+            } 
+            else if (!socket.player) 
+                socket.emit('msg', 'please log in');
+            else 
+                socket.emit('msg', `room "${name}" does not exist`);
+        });
+
+        //--- watch a room --- 
+        socket.on('viewRoom', name => {
+            if (rooms[name]) {
+                rooms[name].watches(socket);
+                socket.emit('msg', `watching room "${name}"`);
+                __.log(`\n (<>.<>) - - - > ${name}`) 
+            } 
+            else
+                socket.emit('msg', `room "${name}" does not exist`);
+        });
+
+        
+        //--- leave --- 
+        socket.on('disconnect', () => {
+            if (socket.player) {
+                let i = players.indexOf(socket.player);
+                players = [...players.slice(0, i), ...players.slice(i+1)];
+                __.logs(`\n< player ${socket.player} disconnected`)(players);
+            }
+        });
 });
-app.get('/style.css', function(req, res,next) {  
-    res.sendFile(__dirname + '/static/style.css');
-});
-app.get('/script.js', function(req, res,next) {  
-    res.sendFile(__dirname + '/static/script.js');
-});
-app.get('/sidebar.js', function(req, res,next) {  
-    res.sendFile(__dirname + '/static/sidebar.js');
-});
 
-// Chargement de socket.io
-const io = require('socket.io').listen(server);
-//socket management
-io.on('connection', function(socket){
-
-	//()=>[gamesID]
-	socket.on('reqLiveGamesList',()=>{
-		socket.emit('gameList',gameList.map(oneGame=>oneGame.ID));
-	})
-	//{initialPos,initialWeight,gridSize,NBVit}
-	socket.on('newGame',(st)=>{
-		console.log("creating game");
-		newGame(st);
-	})
-	socket.on('playerIdentification',(playerName)=>{
-		this.typeOfConnection = 'player'
-		this.playerID=(playerName=="default")?"player_" + playerCurrentlyConnected:playerName;
-		playerCurrentlyConnected ++;
-		socket.emit('ID',this.playerID);
-	})
-	socket.on('viewIdentification',()=>{
-		this.typeOfConnection='view';
-	})
-	socket.on('connectToGame',(ID)=>{
-		this.gameID=(ID=="default")?gameList[gameList.length-1].ID:ID;
-		//socket.join(this.typeOfConnection + '_' + v);
-		socket.join(this.gameID);
-		//a enlever
-		console.log('adding ' + this.playerID + ' to game : ' + this.gameID);
-		if(this.typeOfConnection == 'player'){
-			findGame(this.gameID).addPlayer(this.playerID);
-		}
-		socket.emit('gameDetails',findGame(this.gameID));
-	})
-	socket.on('startGame',(gameID)=>{
-		console.log("starting");
-		findGame(gameID).start()
-	})
-	socket.on('moves',(moveMessage)=>{
-		findGame(this.gameID).addMoves({player:this.playerID,moves:moveMessage});
-	})
-	socket.on('disconnect',()=>{
-		if (this.typeOfConnection='player') {playerCurrentlyConnected--}
-	})
-
-})
-
-//impur
-const newGame = (st) => {
-	ID=Date.now();
-	gameList.push(new game(ID,st));
-	return ID;
-}
-
-const findGame = (gameID) => gameList.find(oneGame=>(oneGame.ID==gameID))
-
-
-
-
-
-class game {
-	constructor(ID,st){
-		this.ID=ID;
-		this.st=st;
-		this.sentMoves=[];
-		this.st.players=[];
-	}
-	addPlayer(playerName){
-		if (this.st.players.indexOf(playerName)<0){
-			this.st.players.push(playerName);
-		}
-		if (this.st.autoStartAtPlayersCount>0 && this.st.autoStartAtPlayersCount<=this.st.players.length){
-			this.start();
-		}
-		this.broadCast('gameDetails',this);
-	}
-	addMoves (moves){
-		this.sentMoves.push(moves);
-		this.updateManager(0);
-	}
-	start(){
-		this.state=(this.st.initialPos=="default")?calc.new(this.st):(this.st.initialPos);
-		console.log("start");
-		this.run=true;
-		this.broadCast('start');
-		this.updateManager();
-	}
-	broadCast(type,data){
-		io.to(this.ID).emit(type,data);
-	}
-	updateManager(type){
-		if(this.run){
-			if (this.st.timer==0){
-				if(calc.sentPlayers(this.sentMoves).length==this.st.players.length)
-					{this.update()}
-			}
-			else if(type!=0) {
-				setTimeout(()=>{this.update()},this.st.timer);
-			}
-		}
-	}
-	update(){
-		console.log('update ______________________');
-		console.log('inital state');
-		this.state=calc.clean(calc.finalPos(this.state));
-		console.log(this.state);
-		this.state=calc.fullResult(calc.addMoves(calc.clean(this.state),this.sentMoves),this.st);
-		this.broadCast('fullNewState',this.state);
-		this.broadCast('simplifiedNewState',(calc.simplify(calc.clean(calc.finalPos(this.state)))));
-		this.sentMoves=[];
-		console.log(this.state);
-		this.updateManager();
-	}
-
-	pause(){
-		this.st.initialPos = calc.clean(this.state);
-		this.run=false;
-		this.broadCast('pause');
-	}
-	stop(){
-		this.pause()
-		this.broadCast('stop');
-		gameList.splice(indexOf(oneGame=>(oneGame.ID==this.ID)),1)
-		if (gameList.length<1){addDefaultGame()}
-	}
-	
-}
-
-var gameList = [];
-var playerCurrentlyConnected = 0;
-
-const defaultGameSettings={initialPos:"default",initialWeight:32,gridSize:30,NBVit:10,timer:1000,autoStartAtPlayersCount:1};
-const addDefaultGame =() => gameList.push(new game(0,defaultGameSettings));
-
-addDefaultGame();
-server.listen(port, () => console.log('Cells Server is listening on port ' + port));
-
-console.log(findGame(0));
+server.listen(port, () => __.log('...cell server @ ' + port));

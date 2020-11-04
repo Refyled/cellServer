@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "test"
+    "test": "node test.js"
   },
   "repository": {
     "type": "git",
@@ -17,8 +17,10 @@
   },
   "homepage": "https://github.com/Refyled/cellServer#readme",
   "dependencies": {
-    "@opeltre/lolo": "0.0.0",
+    "@opeltre/testo": "0.0.0",
+    "colors": "^1.4.0",
     "express": "^4.17.1",
+    "lolo": "^1.1.0",
     "socket.io": "^2.3.0"
   }
 }
