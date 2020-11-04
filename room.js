@@ -18,7 +18,7 @@ let defaults = {
     A room manages sockets associated to each player
     along with a common game state. 
 
-    The internal state of a room is of type: 
+    The internal state* of a room is of type: 
 
         Room = {
             players : [Socket],
@@ -27,7 +27,21 @@ let defaults = {
             move    : (Edge > Cell)
         }
 
-    One should work in the asynchronous state monad: 
+    The room reacts to events of type:
+        
+        Event   = 'move'        Edge > Int 
+
+    Emitting in response events of type:
+
+        Emit    = 'settings'    Settings
+                | 'state'       Vertex > Cell
+                | 'transition'  Edge > (Player, [Int])
+
+    The 'state' and 'transition' types being destined to 
+    players and viewers respectively.
+
+    - - - 
+    (*) One could work in the asynchronous state monad: 
 
         RoomState e = Room -> Async (e, Room)
 
@@ -54,37 +68,38 @@ let Room = settings => {
     //------ Sockets ------ 
 
     my.joins = socket => {
-       
         if (players.length === settings.nPlayers) {
-            socket.emit('msg', 'room is full!');
+            socket.emit('msg', '> room is full!');
             return false
         } 
-        my.emit('msg', `${socket.player} joined`);
+        //--- join
+        socket.emit('settings', settings);
+        my.emit('msg', `> ${socket.player} joined`);
         players.push(socket);
-
-        if (players.length === settings.nPlayers) 
-            my.start();
-
+        //--- send moves
         socket.on('move', m => {
             my.putMove(socket.player, m)
-            socket.emit('msg', 'move received');
         });
-
+        //--- leave game 
         socket.on('disconnect', () => {
-            __.log(`${socket.player} left the game!`);
+            __.log(`< ${socket.player} left the game!`);
             players = players.filter(s => s.connected === true);
             my.pause();
         }) 
-
+        //--- autostart
+        if (players.length === settings.nPlayers) 
+            __.sleep(1000).then(my.start);
         return true;
     }; 
 
     my.watches = socket => {
         viewers.push(socket);
+        socket.emit('settings', settings);
         socket.on('disconnect', () => {
             viewers = viewers.filter(s => s.connected === true);
         });
     }
+
 
     //------ Receive Moves ------ 
 
@@ -95,22 +110,33 @@ let Room = settings => {
     };
 
 
+    //------ Process Moves ------ 
+
+    //  process : (State, Move) -> (State, Transition)
+    let process = (s0, m0) => {
+        let m1 = game.legalise(s0)(m0),
+            tr = game.transition(m1),
+            s1 = game.final(tr),
+            nVit = game.countVitamins(s1),
+            dVit = settings.nVitamins - nVit,
+            s2 = game.addVitamins(dVit)(s1);
+        return [s2, tr];
+    };
+
+
     //------ Main Loop ------
     
     my.loop = (time) => {
-
-        let move = game.legalise(currentState)(currentMove),
-            transition = game.transition(move),
-            nextState = game.final(transition);
-
-        my.emit('state', nextState);
-        my.emitView('transition', transition);
-
-        //... dump current state & move @ time
-
+        //... dump current state & move @ time ? 
+        //--- update 
+        let [nextState, transition] = process(currentState, currentMove);
         currentState = nextState;
         currentMove = {};
-
+        //--- broadcast
+        my.emitView('transition', transition);
+        my.emitAll('time', time);
+        my.emitAll('state', nextState);
+        //--- continue
         if (! my.paused)
         __.sleep(settings.delay)
             .then(() => my.loop(time + 1));
@@ -118,21 +144,26 @@ let Room = settings => {
     
     my.start = () => {
         my.paused = false
+        //--- create initial state
         if (!currentState) {
-            let s0 = game.addPlayers(
-                players.map(s => s.player), 
-                settings.initialWeight
-            )
-            currentState = game.addVitamins(settings.nVitamins)(s0);
+            let ps = players.map(s => s.player),
+                w0 = settings.initialWeight,
+                nVit = settings.nVitamins;
+            currentState = __.pipe(
+                game.addPlayers(ps, w0),
+                game.addVitamins(nVit)
+            )({});
         }
-
-        my.emit('starting...');
+        //--- broadcast
+        my.emit('msg', '|> starting...');
         my.emit('state', currentState);
+        //--- loop
         my.loop(0);
     }
 
     my.pause = () => {
         my.paused = true
+        my.emit('msg', '|| game paused.');
     };
 
     //------ Broadcast ------
@@ -142,6 +173,11 @@ let Room = settings => {
 
     my.emitView = (...xs) => 
         viewers.forEach(v => v.emit(...xs));
+
+    my.emitAll = (...xs) => {
+        my.emit(...xs);
+        my.emitView(...xs);
+    };
 
     //------ DB? ------ 
 

@@ -82,7 +82,10 @@ exports.legalise = () => {
         '0:0 > 1:0': ['a', 3],
         '0:1 > 0:0': ['b', 3],
         '0:1 > 0:2': ['b', 1],
-        '0:1 > 1:1': ['b', 1]
+        '0:1 > 1:1': ['b', 1],
+        '2:2 > 2:2': ['b', 2],
+        '2:2 > 0:0': ['b', 1],
+        '1:2 > 2:2': ['b', 2]
     });
     return test(expect, obtain);
 };
@@ -131,6 +134,6 @@ exports.addPlayers = () => {
         '1:1': ['a', 4],
         '3:3': ['b', 4]
     };
-    let obtain = game2.addPlayers(['a', 'b'], 4);
+    let obtain = game2.addPlayers(['a', 'b'], 4)({});
     return test(expect, obtain);
 };

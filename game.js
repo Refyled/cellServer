@@ -189,14 +189,15 @@ function Game (graph) {
                 ? _r.set(graph.vertexEdge(pos), cell)({})
                 : {};
 
-        let popKey = _r.keys(children)[0],
-            child = children[popKey];
-        children = _r.without(popKey)(children);
+        let popped = _r.keys(children)[0],
+            child = children[popped];
+        children = _r.without(popped)(children);
 
         let [W, wi] = [cell, child].map(getWeight),
             [P, pi] = [cell, child].map(getPlayer);
-        return wi <= W && pi === P
-            ? _r.set(popKey, child)(
+
+        return wi <= W && pi === P 
+            ? _r.set(popped, child)(
                 acceptMoves(setWeight(W - wi)(cell), pos)(children)
             )
             : acceptMoves(cell, pos)(children);
@@ -207,6 +208,9 @@ function Game (graph) {
     //.legalise : (Vertex > Cell) -> (Edge > Cell) -> (Edge > Cell)
     my.legalise = state => moves => 
         __.pipe(
+            _r.filter((c, e) => graph.isEdge(e) 
+                && !(graph.edgeSource(e) === graph.edgeTarget(e))
+            ),
             groupBy((c, e) => graph.edgeSource(e)),
             groups => _r.assign(groups)(_r.map(() => ({}))(state)),
             _r.map((cs, v) => state[v] ? acceptMoves(state[v], v)(cs) : {}),
@@ -236,9 +240,8 @@ function Game (graph) {
     
     //------ Spawn Players ------
 
-    //.addPlayers : ([String], Int) -> (Vertex > Cell)
-    my.addPlayers = (players, w0) => {
-        let state = {};
+    //.addPlayers : ([String], Int) -> (Vertex > Cell) -> (Vertex > Cell)
+    my.addPlayers = (players, w0) => state => {
         graph.initialVertices(players.length)
             .forEach((vi, i) => {
                 state[vi] = newCell(players[i], w0)

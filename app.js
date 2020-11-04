@@ -64,7 +64,7 @@ io.on('connection', socket => {
             if (players.indexOf(name) > 0 || name === '*') 
                 socket.emit('msg', 'please use another name');
             else if (socket.player) 
-                socket.emit('msg', `you are connected as ${socket.player}`)
+                socket.emit('logged', `you are connected as ${socket.player}`)
             else {
                 players.push(name);
                 socket.player = name;
