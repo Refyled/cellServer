@@ -56,4 +56,49 @@ To watch the game from a terminal, use the sample view found in
 > view.join('aok');
 ``` 
 
-Watch them move!
+## Players 
+
+Player behaviours are defined through a function of type `State -> Move` 
+provided to `player.use(...)`, e.g.
+
+```js 
+> let p1 = require('./player')
+> let move = require('./move')
+> p1.use(move)
+> p1.login('bob').join('chillroom')
+```
+ 
+The game state is represented by a collection of  
+`[player, weight]` pairs indexed by vertex labels,
+of the form `"x:y"`. 
+
+Each player responds by his move represented by
+a collection of weights indexed by edge labels,
+of the form `"x0:y0 > x1:y1"`.
+
+If the total weight leaving from `"x0:y0"` is less than 
+the weight initially present, a cell of remaining 
+weight will be left remaining at `"x0:y0"`. 
+
+
+```js
+// move.js 
+ 
+let edge = vertex => {
+    let [x0, y0] = vertex.split(':').map(n => +n);
+    let [x1, y1] = [
+        [x+1, y], [x-1, y], [x, y-1], [x, y+1]
+    ][Math.floor(Math.random() * 4)];
+    return `${x0}:${y0} > ${x1}:${y1}`;
+}
+
+module.exports = (state) => {
+    let move = {};
+    Object.keys(state).forEach(v => {
+        let [player, weight] = state[v];
+        if (player === 'bob') 
+            move[edge(v)] = weight % 4 === 0 ? weight / 2 : weight;
+    });
+    return move; 
+}
+``` 

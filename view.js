@@ -60,7 +60,7 @@ module.exports = my;
 function viewGrid(state) {
 
     let [X, Y] = settings.size,
-        view = __.range(X).map(x => __.range(Y).map(y => '  '));
+        view = __.range(X).map(x => __.range(Y).map(y => '  '.grey));
     
     _r.forEach((cell, vertex) => {
         let [x, y] = vertex.split(':').map(n => +n);
@@ -85,7 +85,6 @@ function viewGrid(state) {
 
 function mapColors (players) {
     players.forEach((p, i) => colormap[p] = colortheme[i]);
-    __.log(colormap);
 }
 
 function cellString([p, w]) {
@@ -111,8 +110,8 @@ function viewWeights (state) {
 
     let totMax = __.pipe(
         _r.map(ws => [
-            ws.reduce((w0, w1) => w0 + w1),
-            Math.max(...ws)
+            [0, ...ws].reduce((w0, w1) => w0 + w1),
+            Math.max(0, ...ws)
         ]),
         _r.map((ws, p) => ws.map(w => ('' + w)[colormap[p]]))
     )(byPlayer);
