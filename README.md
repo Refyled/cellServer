@@ -7,22 +7,23 @@ occupied by a 'cell' or a 'vitamin'.
 Each cell belongs to a player and carries a certain weight. 
 
 Cells may chose to stay in place or move along adjacent edges, 
-either as a whole or by dividing into cells of smaller weight. 
+either as a whole or by dividing into cells of smaller weights. 
 Once moves have been received, 
-the game of cells updates its state by merging cells 
+the game updates its state by merging cells 
 that cross along an edge or reach the same node. 
-
 Only one cell of heaviest weight survives after merging, 
 inheriting the total weight in presence. 
 Cells of a given player are always merged before conflicting 
 with extraneous cells.  
 
 The game of cells differs from a classical
-[cellular automaton](https://en.wikipedia.org/wiki/Cellular_automaton)
-in that it leaves cells with a freedom of choice before applying 
+[cellular automaton](https://en.wikipedia.org/wiki/Cellular_automaton), 
+such as Conway's 
+[game of life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life),
+by giving cells a freedom of choice before applying 
 its deterministic update rule. 
 One may therefore think of the game of cells as a stochastic cellular automaton,
-each player's choices being implemented as a stochastic transition function. 
+where a player's policy is implemented by a stochastic transition function.
 
 ## Usage 
 
@@ -58,8 +59,13 @@ To watch the game from a terminal, use the sample view found in
 
 ## Players 
 
-Player behaviours are defined through a function of type `State -> Move` 
-provided to `player.use(...)`, e.g.
+Player behaviours may be defined through a function of type `State -> Move`,
+called upon each server update to generate the player's response. 
+
+Call `player.use(...)` on a function of type
+`Params -> State -> Move` to automatically pass parameters 
+such as grid size and player login before instantiating the 
+player's policy, e.g.   
 
 ```js 
 > let p1 = require('./player')
@@ -72,8 +78,8 @@ The game state is represented by a collection of
 `[player, weight]` pairs indexed by vertex labels,
 of the form `"x:y"`.
 
-Each player responds by his move represented by
-a collection of weights indexed by edge labels,
+Each player responds by a collection of 
+moving weights indexed by edge labels,
 of the form `"x0:y0 > x1:y1"`.
 
 Note that when the total weight leaving from `"x0:y0"` is less than
@@ -84,13 +90,20 @@ weight will be left staying at `"x0:y0"`.
 ```js
 /*------ move.js ------
 
-    Compute a move for 'bob' given the game state. 
+    Compute a move for `login` given the game state. 
 
         State   = Vertex > (Player, Int) 
         Move    = Edge > Int
 
     where `Key > a` denotes the subtype of `{a}`  
     formed by records with keys in `Key`. 
+
+    This module exports a function `Params -> State -> Move` where:
+
+        Params = {
+            login       : String
+            gridsize    : (Int, Int)
+        }
 
 *///------
 
@@ -103,12 +116,12 @@ let edge = vertex => {
     return `${x0}:${y0} > ${x1}:${y1}`;
 }
 
-//             : (Vertex > (Player, Int)) -> (Edge > Int)
-module.exports = (state) => {
+//             : Params -> (Vertex > (Player, Int)) -> (Edge > Int)
+module.exports = ({login}) => (state) => {
     let move = {};
     Object.keys(state).forEach(v => {
         let [player, weight] = state[v];
-        if (player === 'bob') 
+        if (player === login) 
             move[edge(v)] = weight % 4 === 0 ? weight / 2 : weight;
     });
     return move; 

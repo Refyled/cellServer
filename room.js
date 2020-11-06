@@ -1,7 +1,6 @@
 let Game = require('./game'),
-    Graph = require('./graph');
-
-let __ = require('lolo'),
+    Graph = require('./graph'),
+    __ = require('lolo'),
     _r = __.r;
 
 let defaults = {
@@ -12,21 +11,45 @@ let defaults = {
     delay           : 1000
 };
 
-
 /*------ Room ------
 
     A room manages sockets associated to each player
     along with a common game state. 
 
+    Internal State
+    --------------
     The internal state* of a room is of type: 
 
-        Room = {
+        RoomState = {
             players : [Socket],
             viewers : [Socket],
             state   : (Vertex > Cell),
             move    : (Edge > Cell)
         }
 
+    (*) One could work in the asynchronous state monad: 
+
+        Room e = RoomState -> Async (e, RoomState)
+
+    i.e. functions mapping room states to a promise 
+    for an event - room state pair.   
+
+    Constructor 
+    -----------
+    The `Setting -> Room` constructor looks 
+    for the following properties in the setting object: 
+        
+        Setting = {
+            start           : 'auto' | 'manual'
+            delay           : Int (ms)
+            size            : (Int, Int) 
+            nVitamins       : Int   
+            nPlayers        : Int
+            initialWeight   : Int
+        }
+
+    Events
+    ------
     The room reacts to events of type:
         
         Event   = 'move'        Edge > Int 
@@ -41,14 +64,6 @@ let defaults = {
 
     The 'state' and 'transition' types being destined to 
     players and viewers respectively.
-
-    - - - 
-    (*) One could work in the asynchronous state monad: 
-
-        RoomState e = Room -> Async (e, Room)
-
-    i.e. functions mapping room states to a promise 
-    for an event - room state pair.   
 
 *///------ 
 
