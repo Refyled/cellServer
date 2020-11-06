@@ -92,18 +92,18 @@ weight will be left staying at `"x0:y0"`.
 
     Compute a move for `login` given the game state. 
 
-        State   = Vertex > (Player, Int) 
-        Move    = Edge > Int
-
-    where `Key > a` denotes the subtype of `{a}`  
-    formed by records with keys in `Key`. 
-
     This module exports a function `Params -> State -> Move` where:
 
         Params = {
             login       : String
             gridsize    : (Int, Int)
         }
+        
+        State   = Vertex > (Player, Int) 
+        Move    = Edge > Int
+
+    Denoting by `Key > a` the subtype of `{a}` 
+    formed by records with keys in `Key`. 
 
 *///------
 
@@ -117,7 +117,7 @@ let edge = vertex => {
 }
 
 //             : Params -> (Vertex > (Player, Int)) -> (Edge > Int)
-module.exports = ({login}) => (state) => {
+module.exports = ({login}) => state => {
     let move = {};
     Object.keys(state).forEach(v => {
         let [player, weight] = state[v];
