@@ -68,22 +68,33 @@ provided to `player.use(...)`, e.g.
 > p1.login('bob').join('chillroom')
 ```
  
-The game state is represented by a collection of  
+The game state is represented by a collection of 
 `[player, weight]` pairs indexed by vertex labels,
-of the form `"x:y"`. 
+of the form `"x:y"`.
 
 Each player responds by his move represented by
 a collection of weights indexed by edge labels,
 of the form `"x0:y0 > x1:y1"`.
 
-If the total weight leaving from `"x0:y0"` is less than 
-the weight initially present, a cell of remaining 
-weight will be left remaining at `"x0:y0"`. 
+Note that when the total weight leaving from `"x0:y0"` is less than
+the weight initially present, a cell of remaining
+weight will be left staying at `"x0:y0"`.
 
 
 ```js
-// move.js 
- 
+/*------ move.js ------
+
+    Compute a move for 'bob' given the game state. 
+
+        State   = Vertex > (Player, Int) 
+        Move    = Edge > Int
+
+    where `Key > a` denotes the subtype of `{a}`  
+    formed by records with keys in `Key`. 
+
+*///------
+
+//  edge : Vertex -> Edge 
 let edge = vertex => {
     let [x0, y0] = vertex.split(':').map(n => +n);
     let [x1, y1] = [
@@ -92,6 +103,7 @@ let edge = vertex => {
     return `${x0}:${y0} > ${x1}:${y1}`;
 }
 
+//             : (Vertex > (Player, Int)) -> (Edge > Int)
 module.exports = (state) => {
     let move = {};
     Object.keys(state).forEach(v => {
