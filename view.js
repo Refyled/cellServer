@@ -110,15 +110,15 @@ function viewWeights (state) {
 
     let totMax = __.pipe(
         _r.map(ws => [
-            [0, ...ws].reduce((w0, w1) => w0 + w1),
-            Math.max(0, ...ws)
+            [...ws].reduce((w0, w1) => w0 + w1),
+            Math.max(...ws)
         ]),
         _r.map((ws, p) => ws.map(w => ('' + w)[colormap[p]]))
     )(byPlayer);
 
     let table = [
         ['', 'tot'.grey, 'max'.grey],
-        ...players.map(p => [p.yellow, ...totMax[p]])
+        ...players.map(p => [p.yellow, ...(totMax[p] || [0, 0])])
     ];
 
     let strings = __.range(4).map(() => 

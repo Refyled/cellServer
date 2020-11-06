@@ -4,7 +4,6 @@ let io = require('socket.io-client'),
 
 let settings = {};
 
-
 //--- Transport --- 
 
 let socket = io('http://localhost:3031')
@@ -13,7 +12,7 @@ let socket = io('http://localhost:3031')
     .on('settings', stgs => settings = stgs)
     .on('time', t => __.log(`\n\n==== time: ${t} ====`))
     .on('state', state => {
-        let move = play(state); 
+        let move = randMove(state); 
         __.logs('---> sending:')(move); 
         socket.emit('move', move);
     });
@@ -46,7 +45,6 @@ my.join = room => {
 
 module.exports = my;
 
-
 /*--- Move cells randomly ---
 
     Return a record of weights indexed by edge label: 
@@ -58,8 +56,8 @@ module.exports = my;
         `Vertex > Cell` => { 'x0:y0' : ['player 1', 3] }
 
 
-*///---- play: (Vertex > Cell) -> (Edge > Int)
-function play (state) {
+*///---- randMove: (Vertex > Cell) -> (Edge > Int)
+function randMove (state) {
 
     let myCells = _r.filter(
         ([player, weight]) => player === my.name
