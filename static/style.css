@@ -5,9 +5,17 @@ h1 {
 	color: Grey;
 }
 
+/* Game List */ 
+.game span {
+    padding: 0px 10px;
+}
+.game .name {
+    color: #fff;
+}
+
  /* The side navigation menu */
 .sidenav {
-	color:grey;
+    color:grey;
     height: 100%; /* 100% Full-height */
     width: 0; /* 0 width - change this with JavaScript */
     position: fixed; /* Stay in place */

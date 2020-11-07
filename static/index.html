@@ -1,54 +1,57 @@
-<script src="/socket.io/socket.io.js"></script>
-<script>
-  var socket = io();
-  socket.emit("coucou","je suis un message");
-</script>
-
 <!DOCTYPE html>
 
  <html>
- 	<head>
- 		<meta charset="UTF-8">
- 		<title>Cells For AI</title>
- 		<script src="/socket.io/socket.io.js"></script>
- 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
- 		<link rel="stylesheet" type="text/css" href="style.css">
- 	</head>
+    <head>
+        <meta charset="UTF-8">
+        <title>Cells For AI</title>
+        <!-- deps -->
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/lolo/bundle.js"></script>
+        <script> let _r = __.r; </script>
+        <script src="https://cdn.jsdelivr.net/npm/domorphic@0.0.3/dist/dom.min.js"></script>
+        <!-- style -->
+        <link rel="stylesheet" href="style.css">
+        <!-- Responsive --> 
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+    </head>
 
- 	<body>
- 		
- 		<div id="mySidenav" class="sidenav">
- 			<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+    <body>
+        <div id="mySidenav" class="sidenav">
+            <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">
+                &times;
+            </a>
 
- 			<p>Settings</p>
- 
- 		</div>
+            <a href="javascript:void(0)" 
+                onclick="getRooms()">
+                Games
+            </a> 
+            <div id="games"> 
 
- 			<!-- Use any element to open the sidenav -->
+            </div> 
+        </div>
 
- 			<div class="row">
- 				<div class="col-sm-2">
+        <!-- Use any element to open the sidenav -->
 
- 					<div onclick="openNav()">
- 						<div class="button"></div>
- 						<div class="button"></div>
- 						<div class="button"></div>
- 					</div> 
+        <div class="row">
+            <div class="col-sm-2">
 
- 					<h1>Live View</h1>
- 					<div id='playersList'></div>
+                    <div onclick="openNav()">
+                            <div class="button"></div>
+                            <div class="button"></div>
+                            <div class="button"></div>
+                    </div> 
 
+                    <h1>Live View</h1>
+                    <div id='playersList'></div>
+            </div>
+            
+            <div class="col-sm-2"></div>
 
-
- 				</div>
- 				
- 				<div class="col-sm-2"></div>
-
- 			</div>
- 			<div class="center">
- 					<canvas id="canvas" width="600" height="600"></canvas>
- 			</div>
- 			<script src="script.js"></script> 
- 			<script src="sidebar.js"></script> 
- 	</body>
- </html> 
+        </div>
+        <div class="center">
+            <canvas id="canvas" width="600" height="600"></canvas>
+        </div>
+        <script src="script.js"></script> 
+        <script src="sidebar.js"></script> 
+    </body>
+</html> 

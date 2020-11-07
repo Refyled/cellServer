@@ -1,23 +1,54 @@
-const domain = 'http://localhost:3001';
+const domain = 'http://localhost:3031';
 
-var connectionOptions =  {
-	"force new connection" : true,
-    "reconnectionAttempts": "Infinity", //avoid having user reconnect manually in order to prevent dead clients after a server restart
+let connectionOptions =  {
+    "force new connection" : true,
+    //avoid manual reconnects - dead clients after server restart
+    "reconnectionAttempts": "Infinity", 
     "timeout" : 10000, //before connect_error and connect_timeout are emitted.
     "transports" : ["websocket"]
 };
 
-const mySocket = io(domain,connectionOptions);
+let room = null;
+
+let socket = io(domain,connectionOptions)
+    .on('msg', console.log)
+    .on('rooms', showRooms);
+
+function getRooms () {
+    socket.emit('getRooms');
+}
+
+function joinRoom (name) {
+    socket.emit('viewRoom', name);
+};
 
 
+function showRooms (rooms) {
+    let oldDiv = document.getElementById('games');
+    let newDiv = dom('#games')
+        .branch(games => games.map(
+            ([r, name]) => room.pull(() => _r.update({name})(r))
+        ));
+
+    let room = dom('.game', [
+        dom('span.name', {html: r => r.name}),
+        dom('span.nPlayers', {html: r => `(${r.nPlayers})`}),
+        dom('span.players', {
+            html: r => `${r.players.join('\t')}`
+        })
+    ])
+        .on('click', (e, io, r) => joinRoom(r.name));
+
+    oldDiv.replaceWith(newDiv(__.r.toPairs(rooms)));
+};
 
 var gridSettings={};
-mySocket.on("gameDetails",function(data){
+socket.on("gameDetails",function(data){
 	console.log('room settings recus');
 	roomSettings = data;
 });
 
-mySocket.on("fullNewState",function(data){
+socket.on("fullNewState",function(data){
 	preparedData=prepareData(data);
 	console.log('data reçues');
 	console.log(data);
@@ -28,10 +59,10 @@ mySocket.on("fullNewState",function(data){
 });
 
 //identify as view
-mySocket.emit('viewIdentification');
+socket.emit('viewIdentification');
 
 //connect to default game
-mySocket.emit('connectToGame',0);
+socket.emit('connectToGame',0);
 
 
 const testDataInit =
