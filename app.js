@@ -35,7 +35,7 @@ app.use('static', express.static('static'));
                 | 'getRooms'    ()
                 | 'joinRoom'    String
                 | 'viewRoom'    String
-                | 'newRoom'     Settings
+                | 'newRoom'     (String, Settings)
 
     In response, the server emits events of type: 
 
