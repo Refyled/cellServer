@@ -78,9 +78,30 @@ The game state is represented by a collection of
 `[player, weight]` pairs indexed by vertex labels,
 of the form `"x:y"`.
 
+Note that vitamins are labelled as player '*'
+
+```js
+ // exemple of a state object 
+{
+  '2:2': ['Player1',4],
+  '7:7': [ 'Player2',4],
+  '1:10': ['*', 1]
+}
+```
+
 Each player responds by a collection of 
 moving weights indexed by edge labels,
 of the form `"x0:y0 > x1:y1"`.
+
+```js
+ // exemple of a move object 
+{
+  '7:7 > 7:6': 1, 
+  '7:7 > 7:7': 1, 
+  '7:7 > 6:7': 1, 
+  '7:7 > 8:7': 1
+}
+```
 
 Note that when the total weight leaving from `"x0:y0"` is less than
 the weight initially present, a cell of remaining
