@@ -2,11 +2,11 @@ let __ = require('lolo'),
     _r = __.r,
     test = require('@opeltre/testo');
 
-let Graph = require('../graph'),
-    Game = require('../game');
+let Graph = require('../src/graph'),
+    Game = require('../src/game');
 
-let graph = require('../graph').lattice(3, 3),
-    game = require('../game')(graph);
+let graph = Graph.lattice(3, 3),
+    game = Game(graph);
 
 exports.crossing = () => {
     let expect = {
