@@ -1,162 +1,115 @@
-const domain = 'http://localhost:3031';
+let room = null,
+    settings = {},
+    players = [];
 
-let connectionOptions =  {
-    "force new connection" : true,
-    //avoid manual reconnects - dead clients after server restart
-    "reconnectionAttempts": "Infinity", 
-    "timeout" : 10000, //before connect_error and connect_timeout are emitted.
-    "transports" : ["websocket"]
-};
-
-let room = null;
-
-let socket = io(domain,connectionOptions)
+let socket = io()
     .on('msg', console.log)
-    .on('rooms', showRooms);
+    .on('settings', stgs => settings = stgs)
+    .on('players', ps => players = ps)
+    .on('rooms', showRooms)
+    .on('transition', viewTransition);
+
+//------ Navigation ------
 
 function getRooms () {
     socket.emit('getRooms');
 }
 
 function joinRoom (name) {
-    socket.emit('viewRoom', name);
-};
-
+    socket.emit('viewRoom', name),
+    transitions = [];
+}
 
 function showRooms (rooms) {
     let oldDiv = document.getElementById('games');
-    let newDiv = dom('#games')
-        .branch(games => games.map(
-            ([r, name]) => room.pull(() => _r.update({name})(r))
-        ));
-
-    let room = dom('.game', [
-        dom('span.name', {html: r => r.name}),
-        dom('span.nPlayers', {html: r => `(${r.nPlayers})`}),
-        dom('span.players', {
-            html: r => `${r.players.join('\t')}`
-        })
-    ])
-        .on('click', (e, io, r) => joinRoom(r.name));
-
-    oldDiv.replaceWith(newDiv(__.r.toPairs(rooms)));
-};
-
-var gridSettings={};
-socket.on("gameDetails",function(data){
-	console.log('room settings recus');
-	roomSettings = data;
-});
-
-socket.on("fullNewState",function(data){
-	preparedData=prepareData(data);
-	console.log('data reçues');
-	console.log(data);
-	console.log('data préparée');
-	beginTime = new Date().getTime();
-	console.log(preparedData);
-
-});
-
-//identify as view
-socket.emit('viewIdentification');
-
-//connect to default game
-socket.emit('connectToGame',0);
-
-
-const testDataInit =
-		[
-	];
-
-//a modif
-var players = ['O','player_0','player_1'];
-const cloneBut = (obj,modifs)=> 
-	Object.assign({},obj,modifs);
-const prepareData = (data)=>data.map(cell=>
-	{
-		cell.toX=0;
-		cell.toY=0;
-		if (cell.move[0]=="r"){cell.toX=1}
-		if (cell.move[0]=="l"){cell.toX=-1}
-		if (cell.move[0]=="u"){cell.toY=-1}
-		if (cell.move[0]=="d"){cell.toY=1}
-		return cloneBut(cell,{x:cell.x,y:size-cell.y+1,fillStyle:colorsArray[players.indexOf(cell.player)]})
-	})
-
-
-
-
-const colorsArray = ['rgba(40, 50, 40,','rgba(198, 34, 5,','rgba(1, 69, 106,','rgba(1, 112, 110,','rgba(200, 110, 110,','rgba(80, 240, 97,','rgba(76, 112, 220,','rgba(10, 10, 200,'];
-	
-
-const textColor = '#cee6d8';
-const ligneStyle = {
-	lineWidth:1,
-	strokeStyle:'rgba(200, 200, 200,0.2 )'
-}
-let showWeight = true;
-let transparency = true;
-let size = 10;
-let maxW = 10;
-let minG = 0.3;
-let maxG = 1;
-
-var preparedData=prepareData(testDataInit);
-
-
-let displaySettings={
-	canSize:600
+    let newDiv = 
+        dom('#games')
+            .pull(__.r.toPairs)
+            .branch(games => games.map(
+                ([r, name]) => dom.pull(() => ({name, ...r}))(room)
+            ));
+    let room = 
+        dom('.game', {
+            onclick: (e, io, r) => joinRoom(r.name)
+        }, [
+            ['span.name',       {html: r => r.name}],
+            ['span.nPlayers',   {html: r => `(${r.nPlayers})`}],
+            ['span.players',    {html: r => `${r.players.join('\t')}`}]
+        ]);
+    oldDiv.replaceWith(newDiv(rooms));
 }
 
-let canSize=600;
-let gridSize = 10;
+//------ Game View ------ 
 
-function draw(gridSettings,displaySettings, cellsArray,timer){
-	var ctx = document.getElementById('canvas').getContext('2d');
-	var cellSize=canSize/gridSize;
-	//initialiser
-	ctx.clearRect(0,0,canSize,canSize); 
-	ctx.strokeStyle = ligneStyle.strokeStyle;
-	ctx.lineWidth = ligneStyle.lineWidth;
-	//lignes horiz
-	for (var i = 0; i <= size+1; i++) {
-    	ctx.beginPath();
-    	ctx.moveTo(0,i * cellSize);
-    	ctx.lineTo(canSize,i * cellSize);
-    	ctx.stroke();
+let svg = dom('svg', {width: "600", height: "600"})
+    .place('svg')
+    .branch([dom('g').place('gCells')])
+    .put('#view');
+
+let ioCells = dom.IO.put(svg)();
+
+function viewTransition (trs) {
+
+    let [X, Y] = settings.size,
+        [W, H] = [600, 600],
+        [w, h] = [W/X, H/Y],
+        cssDelay = 0.01
+        ds = (settings.delay / 2000) - 3 * cssDelay;
+
+    //  interpolate : (Edge, Num) -> (Int, Int)
+    let interpolate = (edge, k) => {
+        let [[x0, y0], [x1, y1]] = edge
+            .split(' > ').map(v => v.split(':').map(n => +n));
+        return [(1-k)*x0 + k*x1, (1-k)*y0 + k*y1];
     }
-    //lignes vert
-     for (var i = 0; i <= size+1; i++) {
-  		ctx.beginPath();
-  		ctx.moveTo(i * cellSize, 0);
-  		ctx.lineTo(i * cellSize, canSize);
-  		ctx.stroke();
-  	}
-  	//proprtion d'avancée dans le coup actuel
-	let proportion = (new Date().getTime() - beginTime)/tempsDeCoup;
-	//let proportion = 0;
-	function drawCell(cell,step){
-		if (cell.displayWeight[step*3]>0){
-		let gradient = Math.min(1,(cell.weight/maxW)*(maxG-minG)+minG);
-		//si c'est une nouvelle vitamine
-		if (cell.weight == 1 && cell.displayWeight[3] == 0){
-			gradient=proportion*maxG}			
-		ctx.fillStyle = ''+ cell.fillStyle + gradient + ')';
-		ctx.fillRect((cell.x+cell.toX*proportion-1)*cellSize,(cell.y+cell.toY*proportion-1)*cellSize,cellSize,cellSize);
-		if (showWeight == true){
-			ctx.fillStyle=textColor;
-			ctx.textAlign="center";
-			ctx.fillText(cell.displayWeight[(step)*3],(cell.x+cell.toX*proportion-1)*cellSize+cellSize/2,(cell.y+cell.toY*proportion-1)*cellSize+cellSize/2);
-		}
-		}
-	}
-	preparedData.forEach(cell=>{drawCell(cell,0)});
-		window.requestAnimationFrame(draw);
+
+    //  model : Num -> [CellModel]
+    let model = k => __.pipe(
+        _r.map(([p, ws], edge) => ({
+            player: p,
+            weight: ws[k],
+            pos: interpolate(edge, k).map(coord => coord * w)
+        })),
+        _r.toPairs, 
+        __.map(([m, e]) => m)
+    )(trs); 
+
+    let color = () => "#f23";
+
+    //  cell : CellModel -> Dom
+    let cell = dom('rect.cell', {
+        fill        : m => color(m.weight, m.player),
+        width       : w,
+        height      : h
+    })
+        .style('transform',  m => `translate(${m.pos[0]}px, ${m.pos[1]}px)`)
+        .style('transition', `transform ${ds}s linear`)
+        .place('cell')
+
+    //  cells : [CellModel] -> Dom
+    let cells = dom.map(cell)
+        .pull(model)
+    
+    //  group : [CellModel] -> Dom
+    let group = dom('g#transition')
+        .place('gCells')
+        .put('svg')
+        .branch(cells)
+
+    //  tick : Num -> IO(Num)
+    let tick = k => dom.IO()
+        .return(k)
+        .bind(dom.IO.map.set(cells))
+        .return(k + 0.5);
+    
+    //  loop : Num -> IO()
+    let loop = k => __.log(k) < 1
+        ? tick(k).sleep(ds + cssDelay).bind(loop)
+        : tick(k);
+    
+    ioCells.return(0)
+        .bind(dom.IO.replace(group))
+        .sleep(cssDelay)
+        .return(0.5)
+        .bind(loop);
 }
-
-
-beginTime = new Date().getTime();
-let tempsDeCoup=1000;
-draw();
-
