@@ -1,11 +1,16 @@
 let room = null,
     settings = {},
-    players = [];
+    players = [],
+    colormap = {'*': [0, 255, 0]},
+    playerColors = [
+        [255, 0, 2],
+        [0, 0, 255]
+    ];
 
 let socket = io()
     .on('msg', console.log)
     .on('settings', stgs => settings = stgs)
-    .on('players', ps => players = ps)
+    .on('players', getPlayers)
     .on('rooms', showRooms)
     .on('transition', viewTransition);
 
@@ -39,11 +44,21 @@ function showRooms (rooms) {
     oldDiv.replaceWith(newDiv(rooms));
 }
 
+
+//------ Player Colors ------
+
+function getPlayers (ps) {
+    players = ps;
+    players.forEach((p, i) => {
+        colormap[p] = playerColors[i]
+    });
+}
+
+
 //------ Game View ------ 
 
-let svg = dom('svg', {width: "600", height: "600"})
-    .place('svg')
-    .branch([dom('g').place('gCells')])
+let svg = dom('svg', {width: "600px", height: "600px"})
+    .branch([dom('g#transition').place('gCells')])
     .put('#view');
 
 let ioCells = dom.IO.put(svg)();
@@ -53,8 +68,9 @@ function viewTransition (trs) {
     let [X, Y] = settings.size,
         [W, H] = [600, 600],
         [w, h] = [W/X, H/Y],
-        cssDelay = 0.01
-        ds = (settings.delay / 2000) - 3 * cssDelay;
+        fps = 20,
+        ds = 1/fps,
+        T = settings.delay/1000;
 
     //  interpolate : (Edge, Num) -> (Int, Int)
     let interpolate = (edge, k) => {
@@ -62,12 +78,17 @@ function viewTransition (trs) {
             .split(' > ').map(v => v.split(':').map(n => +n));
         return [(1-k)*x0 + k*x1, (1-k)*y0 + k*y1];
     }
+   
+    //  interweight : ([Int], Num) -> Num
+    let interweight = (ws, k) => k <= .5 
+        ? 2 * k * ws[1] + (1 - 2 * k) * ws[0]
+        : 2 * (k - .5) * ws[2] + (2 - 2 * k) * ws[1];
 
     //  model : Num -> [CellModel]
     let model = k => __.pipe(
         _r.map(([p, ws], edge) => ({
             player: p,
-            weight: ws[k],
+            weight: interweight(ws, k), 
             pos: interpolate(edge, k).map(coord => coord * w)
         })),
         _r.toPairs, 
@@ -78,12 +99,12 @@ function viewTransition (trs) {
 
     //  cell : CellModel -> Dom
     let cell = dom('rect.cell', {
-        fill        : m => color(m.weight, m.player),
+        fill        : m => `rgb(${colormap[m.player].join(',')})`,
+        'fill-opacity': m => Math.min(m.weight/10, 1),
         width       : w,
-        height      : h
+        height      : h,
+        transform: m => `translate(${m.pos[0]}, ${m.pos[1]})`
     })
-        .style('transform',  m => `translate(${m.pos[0]}px, ${m.pos[1]}px)`)
-        .style('transition', `transform ${ds}s linear`)
         .place('cell')
 
     //  cells : [CellModel] -> Dom
@@ -94,22 +115,23 @@ function viewTransition (trs) {
     let group = dom('g#transition')
         .place('gCells')
         .put('svg')
-        .branch(cells)
+        .branch(cells);
 
     //  tick : Num -> IO(Num)
     let tick = k => dom.IO()
         .return(k)
         .bind(dom.IO.map.set(cells))
-        .return(k + 0.5);
+        .return(k + ds / T);
     
     //  loop : Num -> IO()
-    let loop = k => __.log(k) < 1
-        ? tick(k).sleep(ds + cssDelay).bind(loop)
+    let loop = k => k < 1 - ds / T
+        ? tick(k).sleep(1/fps).bind(loop)
         : tick(k);
     
     ioCells.return(0)
         .bind(dom.IO.replace(group))
-        .sleep(cssDelay)
-        .return(0.5)
+        .sleep(ds)
+        .return(ds / T)
         .bind(loop);
+
 }
