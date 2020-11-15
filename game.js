@@ -58,17 +58,18 @@ let groupBy = key => elems => {
 //  degroup : (b > {a}) -> {a} 
 let degroup = groups => 
     _r.reduce(
-        (group, elems, i) => _r.assign(group)(elems),
+        (elems, group) => _r.assign(group)(elems),
         {}
-    )(groups); 
+    )(groups);
 
 /*  Randomly select one of a record's keys */
 
 //  randKey : {a} -> String
 let randKey = as => {
     let ks = Object.keys(as); 
-    let n = Math.floor(Math.random() * ks.length);
-    return ks[n];
+    return ks.length > 1
+        ? ks[Math.floor(Math.random() * ks.length)]
+        : ks[0];
 }; 
 
 /*  Randomly select N elements in an array */
@@ -84,6 +85,15 @@ let randElements = N => as => {
     ])];
 };
 
+/*  Map function on record - acting in place */
+
+//  rmap : (a -> b) -> {a} -> St({a}, {b})
+let rmap = f => (as) => {
+    Object.keys(as).forEach(k => {
+        as[k] = f(as[k], k);
+    });
+    return as;
+}
 
 //------ Merging Cells ------ 
 
@@ -93,18 +103,18 @@ let randElements = N => as => {
 let mergeGroup = cells => {
     if (_r.keys(cells).length === 1) 
         return cells;
-    let [maxWeight, totalWeight] = __.pipe(
-        _r.map(getWeight),
-        _r.reduce(
-            ([max, tot], w) => [w > max ? w : max, tot + w],
-            [0, 0]
-        )
+    let [maxWeight, totalWeight] = _r.reduce(
+        ([max, tot], cell) => {
+            let w = getWeight(cell);
+            return [w > max ? w : max, tot + w];
+        },
+        [0, 0]
     )(cells);
     let winner = __.pipe(
         _r.filter(c => getWeight(c) === maxWeight && !isVitamin(c)),
         randKey
     )(cells); 
-    return _r.map(
+    return rmap(
         (c, key) => setWeight(key === winner ? totalWeight : 0)(c)
     )(cells);
 }; 
@@ -113,9 +123,9 @@ let mergeGroup = cells => {
 
 //  merge : {Cell} -> {Cell} 
 let merge = __.pipe(
-    groupBy(getPlayer),
-    _r.map(mergeGroup),
-    degroup,
+    groupBy(getPlayer), 
+    rmap(mergeGroup),
+    degroup, 
     mergeGroup
 );
 
@@ -131,8 +141,8 @@ let merge = __.pipe(
 //  mergeBy : (Cell -> String) -> {Cell} -> {Cell} 
 let mergeBy = property => __.pipe(
     groupBy(property),
-    _r.map(merge),
-    degroup
+    rmap(merge),
+    degroup,
 ); 
 
 
@@ -218,7 +228,7 @@ function Game (graph) {
             ),
             groupBy((c, e) => graph.edgeSource(e)),
             groups => _r.assign(groups)(_r.map(() => ({}))(state)),
-            _r.map((cs, v) => state[v] ? acceptMoves(state[v], v)(cs) : {}),
+            rmap((cs, v) => state[v] ? acceptMoves(state[v], v)(cs) : {}),
             degroup
         )(moves); 
 
