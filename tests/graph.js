@@ -1,4 +1,4 @@
-let graph = require('../src/graph'),
+let graph = require('../graph'),
     test = require('@opeltre/testo');
 
 let G = graph.lattice(3, 3);
