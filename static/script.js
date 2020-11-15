@@ -1,6 +1,4 @@
-const domain = 'http://localhost:3031';
-
-const _r = __.r;
+const domain = 'http://localhost:3001';
 
 var connectionOptions =  {
 	"force new connection" : true,
@@ -9,196 +7,125 @@ var connectionOptions =  {
     "transports" : ["websocket"]
 };
 
-let state0={};
-let state1={};
-
-const mySocket = io(domain,connectionOptions)
-
-    .on('state', s => {
-    	if(displaySettings.mode === 'state'){
-    		state0 = state1;
-    		state1 = s;
-    		draw(state0,state1)}
-    	})
+const mySocket = io(domain,connectionOptions);
 
 
-    .on('transition', t => {
-    	if(displaySettings.mode === 'transition'){ draw(t,{})}})
 
-    .on('settings', stgs => {console.log(stgs);
-    	draw = drawState(stgs,displaySettings)})
+var gridSettings={};
+mySocket.on("gameDetails",function(data){
+	console.log('room settings recus');
+	roomSettings = data;
+});
 
-    .on('players', ps => {
-        players = ["*"].concat(ps); 
-        console.log(players)
-    });
+mySocket.on("fullNewState",function(data){
+	preparedData=prepareData(data);
+	console.log('data reçues');
+	console.log(data);
+	console.log('data préparée');
+	beginTime = new Date().getTime();
+	console.log(preparedData);
 
-let players=[];
+});
 
+//identify as view
+mySocket.emit('viewIdentification');
 
-let displaySettings = {
-	canSize : 600,
-	ligneStyle : {
-		lineWidth:1,
-		strokeStyle:'rgba(200, 200, 200,0.2 )'},
-	textColor : '#cee6d8',
-	font : "15px Verdana",
-	timePerMove : 1000,
-	colorScheme : [[40,50,40],[198,34,5],[1,69,106],[1,112,110],[220,110,110]],
-	mode : 'transition',
-	showWeight : true
-}
-//let liveStates = [{},{}];
+//connect to default game
+mySocket.emit('connectToGame',0);
 
 
-const barycentre = (proportion) => (source,target) => source + proportion*(target-source);
+const testDataInit =
+		[
+	];
 
-let draw = (s0,s1)=>{};
-
-
-//connect to room 'room'
-mySocket.emit('viewRoom','room');
-
-	var animReq;
-
-const drawState = (settings,displaySettings) => (s0,s1) => {
-
-
-	let beginTime = new Date().getTime();
-	var ctx = document.getElementById('canvas').getContext('2d');
-	
-	var cellSize=displaySettings.canSize/settings.size[0];
-
-	let displayCellAr = [];
-
-	if (displaySettings.mode === 'state')
+//a modif
+var players = ['O','player_0','player_1'];
+const cloneBut = (obj,modifs)=> 
+	Object.assign({},obj,modifs);
+const prepareData = (data)=>data.map(cell=>
 	{
-		displayCellAr=[...new Set(_r.keys(s0).concat(_r.keys(s1)))]
-			.map(pos => { 
-				return {
-					x0: +pos.split(':')[0],
-					x1: +pos.split(':')[0],
-					y0: +pos.split(':')[1],
-					y1: +pos.split(':')[1],
-					weight0: typeof s0[pos] !== 'undefined'?
-						s0[pos][1]
-						:0,
-					weight1: typeof s1[pos] !== 'undefined' ?
-						s1[pos][1]
-						:0,
-					player0: typeof s0[pos] !== 'undefined'?
-						s0[pos][0]
-						:s1[pos][0],
-					player1: typeof s1[pos] !== 'undefined'?
-						s1[pos][0]
-						:s0[pos][0]
-				}
-			});
-	}
-	if (displaySettings.mode === 'transition')
-	{
-		displayCellArTemp=_r.keys(s0).map(vertex=>{return{
-			x0: + (vertex.split(' > ')[0]).split(':')[0],
-			x1: + (vertex.split(' > ')[1]).split(':')[0],
-			y0: + (vertex.split(' > ')[0]).split(':')[1],
-			y1: + (vertex.split(' > ')[1]).split(':')[1],
-			weight0: s0[vertex][1][0],
-			weight1: s0[vertex][1][2],
-			player0: s0[vertex][0],
-			player1: s0[vertex][0]
-		}})
-
-		displayCellAr = [].concat(
-			displayCellArTemp.filter(cell=>(cell.weight1>0)),
-			displayCellArTemp.filter(cell=>(cell.weight1==0)))
-	}
-
-
-
-	let s0Max = Math.min(30,Math.max(...displayCellAr.map(cell=>cell.weight0)));
-	let s1Max = Math.min(30,Math.max(...displayCellAr.map(cell=>cell.weight1)));
-	s0Max = 1;
-	s1Max = 1;
-
-	let getRGB = (player) => displaySettings.colorScheme[players.indexOf(player)];
-	  	
-	let getAlpha = (weight,maxWeight) => weight/maxWeight;
-
-	//draw top canvas
-	var ctx2 = document.getElementById('topCan').getContext('2d');
-	players.filter(player=>player != "*").forEach((player,index)=>{
-		ctx2.fillStyle ="rgba(" + (getRGB(player))[0]
-	  	+ "," + (getRGB(player))[1]
-	  	+ "," + (getRGB(player))[2]
-	  	+ "," + 1
-	  	+ ")";
-	  	ctx2.font = displaySettings.font;
-	  	ctx2.textAlign = "center";
-		ctx2.fillText(player,200+(400/(players.length-1))*(index),50);
-
+		cell.toX=0;
+		cell.toY=0;
+		if (cell.move[0]=="r"){cell.toX=1}
+		if (cell.move[0]=="l"){cell.toX=-1}
+		if (cell.move[0]=="u"){cell.toY=-1}
+		if (cell.move[0]=="d"){cell.toY=1}
+		return cloneBut(cell,{x:cell.x,y:size-cell.y+1,fillStyle:colorsArray[players.indexOf(cell.player)]})
 	})
+
+
+
+
+const colorsArray = ['rgba(40, 50, 40,','rgba(198, 34, 5,','rgba(1, 69, 106,','rgba(1, 112, 110,','rgba(200, 110, 110,','rgba(80, 240, 97,','rgba(76, 112, 220,','rgba(10, 10, 200,'];
 	
 
-
-	function drawFrame(){
-		let proportion = (new Date().getTime() - beginTime)/displaySettings.timePerMove	;
-		let between = barycentre(proportion);
-		//initialiser 
-		ctx.clearRect(0,0,displaySettings.canSize,displaySettings.canSize); 
-		ctx.strokeStyle = displaySettings.ligneStyle.strokeStyle;
-		ctx.lineWidth = displaySettings.ligneStyle.lineWidth;
-		//lignes horiz
-		for (var i = 0; i <= settings.size[0]+1; i++) {
-	    	ctx.beginPath();
-	    	ctx.moveTo(0,i * cellSize);
-	    	ctx.lineTo(displaySettings.canSize,i * cellSize);
-	    	ctx.stroke();
-	    }
-	    //lignes vert
-	     for (var i = 0; i <= settings.size[0]+1; i++) {
-	  		ctx.beginPath();
-	  		ctx.moveTo(i * cellSize, 0);
-	  		ctx.lineTo(i * cellSize, displaySettings.canSize);
-	  		ctx.stroke();
-	  	}
-
-	  	let drawCell = (style,x,y) => 
-	  	{
-	  		ctx.fillStyle=style;
-	  		ctx.fillRect(x*cellSize,y*cellSize,cellSize,cellSize)
-	  	}
-	  	let drawWeight = (weight,x,y) => {
-	  		ctx.fillStyle = displaySettings.textColor;
-	  		ctx.font = displaySettings.font;
-	  		ctx.textAlign = "center";
-	  		ctx.fillText(weight,x*cellSize+cellSize/2,y*cellSize+cellSize/2);
-	  	}
-
-
-	  	let getStyle = (cell) => 
-	  	"rgba(" + between((getRGB(cell.player0))[0],getRGB(cell.player1)[0])
-	  	+ "," + between((getRGB(cell.player0))[1],getRGB(cell.player1)[1])
-	  	+ "," + between((getRGB(cell.player0))[2],getRGB(cell.player1)[2])
-	  	+ "," + between(getAlpha(cell.weight0,s0Max),getAlpha(cell.weight1,s1Max))
-	  	+ ")";
-
-
-	  	displayCellAr.forEach(cell=>{drawCell(getStyle(cell,proportion),
-	  		between(cell.x0,cell.x1),between(cell.y0,cell.y1))
-	  		if (displaySettings.showWeight)
-	  			{drawWeight(cell.weight0,
-	  			between(cell.x0,cell.x1),between(cell.y0,cell.y1))}
-	  		});
-
-
-
-		if (proportion<=1)
-		{animReq = window.requestAnimationFrame(drawFrame);
-		}		
-	}
-			
-		
-	window.cancelAnimationFrame(animReq);
-	drawFrame();
-	
+const textColor = '#cee6d8';
+const ligneStyle = {
+	lineWidth:1,
+	strokeStyle:'rgba(200, 200, 200,0.2 )'
 }
+let showWeight = true;
+let transparency = true;
+let size = 10;
+let maxW = 10;
+let minG = 0.3;
+let maxG = 1;
+
+var preparedData=prepareData(testDataInit);
+
+
+let displaySettings={
+	canSize:600
+}
+
+let canSize=600;
+let gridSize = 10;
+
+function draw(gridSettings,displaySettings, cellsArray,timer){
+	var ctx = document.getElementById('canvas').getContext('2d');
+	var cellSize=canSize/gridSize;
+	//initialiser
+	ctx.clearRect(0,0,canSize,canSize); 
+	ctx.strokeStyle = ligneStyle.strokeStyle;
+	ctx.lineWidth = ligneStyle.lineWidth;
+	//lignes horiz
+	for (var i = 0; i <= size+1; i++) {
+    	ctx.beginPath();
+    	ctx.moveTo(0,i * cellSize);
+    	ctx.lineTo(canSize,i * cellSize);
+    	ctx.stroke();
+    }
+    //lignes vert
+     for (var i = 0; i <= size+1; i++) {
+  		ctx.beginPath();
+  		ctx.moveTo(i * cellSize, 0);
+  		ctx.lineTo(i * cellSize, canSize);
+  		ctx.stroke();
+  	}
+  	//proprtion d'avancée dans le coup actuel
+	let proportion = (new Date().getTime() - beginTime)/tempsDeCoup;
+	//let proportion = 0;
+	function drawCell(cell,step){
+		if (cell.displayWeight[step*3]>0){
+		let gradient = Math.min(1,(cell.weight/maxW)*(maxG-minG)+minG);
+		//si c'est une nouvelle vitamine
+		if (cell.weight == 1 && cell.displayWeight[3] == 0){
+			gradient=proportion*maxG}			
+		ctx.fillStyle = ''+ cell.fillStyle + gradient + ')';
+		ctx.fillRect((cell.x+cell.toX*proportion-1)*cellSize,(cell.y+cell.toY*proportion-1)*cellSize,cellSize,cellSize);
+		if (showWeight == true){
+			ctx.fillStyle=textColor;
+			ctx.textAlign="center";
+			ctx.fillText(cell.displayWeight[(step)*3],(cell.x+cell.toX*proportion-1)*cellSize+cellSize/2,(cell.y+cell.toY*proportion-1)*cellSize+cellSize/2);
+		}
+		}
+	}
+	preparedData.forEach(cell=>{drawCell(cell,0)});
+		window.requestAnimationFrame(draw);
+}
+
+
+beginTime = new Date().getTime();
+let tempsDeCoup=1000;
+draw();
+
