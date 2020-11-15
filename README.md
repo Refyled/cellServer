@@ -1,12 +1,12 @@
-# Game of Cells
+# Cells for AI
 
-The game of cells is a game to be played by computers. 
+The game of cells is a game to be played by computers.
 
-It consists of regular grid whose nodes may be either empty, 
-occupied by a 'cell' or a 'vitamin'. 
-Each cell belongs to a player and carries a certain weight. 
+It consists of cells living on a regular grid, carrying an integer weight 
+which they may increase by merging with
+their siblings,or by eating other lighter cells and vitamins. 
 
-Cells may chose to stay in place or move along adjacent edges, 
+Cells can stay in place or move along adjacent edges, 
 either as a whole or by dividing into cells of smaller weights. 
 Once moves have been received, 
 the game updates its state by merging cells 
@@ -29,7 +29,7 @@ where a player's policy is implemented by a stochastic transition function.
 
 To run the game server on your computer, clone the and run `app.js`:
 ```
-$ git clone https://github.com/opeltre/cellServer
+$ git clone https://github.com/refyled/cellServer
 $ cd cellServer
 $ node app.js
 ``` 
@@ -74,38 +74,39 @@ player's policy, e.g.
 > p1.login('bob').join('chillroom')
 ```
  
-The game state is represented by a collection of 
-`[player, weight]` pairs indexed by vertex labels,
-of the form `"x:y"`.
+The game state is given as a record mapping 
+vertex labels `'x:y'` to cells 
+viewed as `[player, weight]` 
+pairs. 
 
-Note that vitamins are labelled as player '*'
-
-```js
- // exemple of a state object 
-{
-  '2:2': ['Player1',4],
-  '7:7': [ 'Player2',4],
-  '1:10': ['*', 1]
-}
-```
-
-Each player responds by a collection of 
-moving weights indexed by edge labels,
-of the form `"x0:y0 > x1:y1"`.
+Note that vitamins are labelled as player `'*'`
 
 ```js
- // exemple of a move object 
-{
-  '7:7 > 7:6': 1, 
-  '7:7 > 7:7': 1, 
-  '7:7 > 6:7': 1, 
-  '7:7 > 8:7': 1
-}
+//  State example
+let state = {
+    '2:2'   : ['A', 4],
+    '3:2'   : ['B', 5],
+    '5:6'   : ['A', 2],
+    '9:4'   : ['*', 1]
+};
 ```
 
-Note that when the total weight leaving from `"x0:y0"` is less than
-the weight initially present, a cell of remaining
-weight will be left staying at `"x0:y0"`.
+Each player responds by a 
+record mapping edge labels 
+`'x0:y0 > x1:y1'` to moving weights.  
+
+```js
+//  Move for player "A":
+let move = {
+    '2:2 > 2:3': 2,
+    '2:2 > 1:2': 2,
+    '5:6 > 7:6': 1,
+};
+```
+
+A cell of remaining weight stays in place 
+if the total weight leaving from a node is less 
+than the prior weight present on that node.  
 
 
 ```js
