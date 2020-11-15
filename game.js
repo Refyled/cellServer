@@ -43,10 +43,12 @@ let newCell = (p, w) => [p, w];
 let groupBy = key => elems => {
     let groups = {}; 
     _r.forEach((ei, i) => {
-        let gi = groups[key(ei, i)];
-        if (!gi)
-            gi = {}
-        gi[i] = ei;
+        let k = key(ei, i),
+            gk = groups[k]
+        if (!gk)
+            gk = {}
+        gk[i] = ei;
+        groups[k] = gk;
     })(elems);  
     return groups;
 };
