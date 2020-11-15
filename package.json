@@ -20,7 +20,7 @@
     "@opeltre/testo": "0.0.0",
     "colors": "^1.4.0",
     "express": "^4.17.1",
-    "lolo": "^1.1.0",
+    "lolo": "^1.1.2",
     "socket.io": "^2.3.0"
   }
 }
