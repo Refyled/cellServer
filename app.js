@@ -1,4 +1,4 @@
-let Room = require('./src/room'),
+let Room = require('./room'),
     __ = require('lolo'),
     _r = __.r;
 
