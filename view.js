@@ -52,6 +52,11 @@ my.use = str => {
     return my;
 };
 
+my.start = () => {
+    socket.emit('start')
+    return my;
+};
+
 module.exports = my;
 
 

@@ -68,7 +68,7 @@ function viewTransition (trs) {
     let [X, Y] = settings.size,
         [W, H] = [600, 600],
         [w, h] = [W/X, H/Y],
-        fps = 20,
+        fps = 10,
         ds = 1/fps,
         T = settings.delay/1000;
 
@@ -117,21 +117,28 @@ function viewTransition (trs) {
         .put('svg')
         .branch(cells);
 
-    //  tick : Num -> IO(Num)
+    //  tick : Num -> IO ()
     let tick = k => dom.IO()
         .return(k)
         .bind(dom.IO.map.set(cells))
-        .return(k + ds / T);
     
-    //  loop : Num -> IO()
-    let loop = k => k < 1 - ds / T
-        ? tick(k).sleep(1/fps).bind(loop)
-        : tick(k);
-    
+    //  loop : Time -> IO Time
+    let loop = t0 => {
+        let k = __.logs('k:')((Date.now() - t0) / settings.delay);
+        return ds < __.logs('time remaining')((1 - k) * T)
+            ? tick(k).sleep(ds).bind(() => loop(t0))
+            : tick(k);
+    };
+
+    //--- Show initial State ---
+
     ioCells.return(0)
-        .bind(dom.IO.replace(group))
+        .bind(dom.IO.replace(group));
+
+    //--- Start Loop ---
+
+    ioCells.return(Date.now())
         .sleep(ds)
-        .return(ds / T)
         .bind(loop);
 
 }
