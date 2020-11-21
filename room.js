@@ -127,7 +127,7 @@ let Room = settings => {
 
         //--- events 
         socket
-            .on('start', my.start)
+            .on('start', () => my.onStart(socket))
             .on('pause', my.pause)
             .on('disconnect', () => {
                 viewers = viewers.filter(s => s.connected === true);
@@ -148,7 +148,15 @@ let Room = settings => {
         players = players.filter(s => s.connected === true);
         my.pause();
     }; 
-
+    
+    my.onStart = (socket) => {
+        if (players.length === settings.nPlayers) {
+            socket.emit('msg', 'game starting...');
+            my.start();
+        } 
+        else 
+            socket.emit('msg', 'waiting for players');
+    };
 
     my.start = () => {
         my.paused = false
