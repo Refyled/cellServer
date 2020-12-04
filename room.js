@@ -1,5 +1,6 @@
-let Game = require('./game'),
-    Graph = require('./graph'),
+let Graph = require('./graph'),
+    Game = require('./game'),
+    Player = require('./player'),
     __ = require('lolo'),
     _r = __.r;
 
@@ -53,6 +54,8 @@ let defaults = {
     The room reacts to events of type:
         
         Event   = 'move'        Edge > Int 
+                | 'start'       ()
+                | 'pause'       ()
                 | 'disconnect'  () 
 
     Emitting in response events of type:
@@ -85,94 +88,85 @@ let Room = settings => {
     //------ Sockets ------ 
 
     my.joins = socket => {
+
         if (players.length === settings.nPlayers) {
-            socket.emit('msg', '> room is full!');
+            socket.emit('msg', 'room is full!');
             return false
-        } 
+        }
+
         //--- join
-        socket.emit('settings', settings);
-        socket.emit('players', players.map(s => s.player));
-        my.emit('msg', `> ${socket.player} joined`);
+        my.emit('msg', `${socket.player} joined`);
         players.push(socket);
-        //--- send moves
-        socket.on('move', m => {
-            my.putMove(socket.player, m)
-        });
-        //--- leave game 
-        socket.on('disconnect', () => {
-            __.log(`< ${socket.player} left the game!`);
-            players = players.filter(s => s.connected === true);
-            my.pause();
-        }) 
+
+        //--- info 
+        socket
+            .emit('players', players.map(s => s.player))
+            .emit('settings', settings);
+        
+        //--- events
+        socket
+            .on('move', m => my.onMove(socket.player, m))  
+            .on('disconnect', () => my.onLeave(socket))
+
         //--- autostart
-        if (players.length === settings.nPlayers) 
-            __.sleep(1000).then(my.start);
+        settings.start === "auto"
+            && players.length === settings.nPlayer
+            && __.sleep(1000).then(my.start);
+
         return true;
     }; 
 
     my.watches = socket => {
+
         viewers.push(socket);
-        socket.emit('settings', settings);
-        socket.emit('players', players.map(s => s.player));
-        socket.on('disconnect', () => {
-            viewers = viewers.filter(s => s.connected === true);
-        });
+
+        //--- info
+        socket
+            .emit('settings', settings)
+            .emit('players', players.map(s => s.player));
+
+        //--- events 
+        socket
+            .on('start', () => my.onStart(socket))
+            .on('pause', my.pause)
+            .on('disconnect', () => {
+                viewers = viewers.filter(s => s.connected === true);
+            })
     }
 
 
     //------ Receive Moves ------ 
 
-    my.putMove = (player, move) => {
+    my.onMove = (player, move) => {
         currentMove = _r.assign(
             _r.map(weight => [player, weight])(move)
         )(currentMove);
     };
 
-
-    //------ Process Moves ------ 
-
-    //  process : (State, Move) -> (State, Transition)
-    let process = (s0, m0) => {
-        let m1 = game.legalise(s0)(m0),
-            tr = game.transition(m1),
-            s1 = game.final(tr),
-            nVit = game.countVitamins(s1),
-            dVit = settings.nVitamins - nVit,
-            s2 = game.addVitamins(dVit)(s1);
-        return [s2, tr];
+    my.onLeave = (socket) => {
+        my.emitAll(`${socket.player} left the game!`);
+        players = players.filter(s => s.connected === true);
+        my.pause();
+    }; 
+    
+    my.onStart = (socket) => {
+        if (players.length === settings.nPlayers) {
+            socket.emit('msg', 'game starting...');
+            my.start();
+        } 
+        else 
+            socket.emit('msg', 'waiting for players');
     };
 
-
-    //------ Main Loop ------
-    
-    my.loop = (time) => {
-        //... dump current state & move @ time ? 
-        //--- update 
-        let [nextState, transition] = process(currentState, currentMove);
-        currentState = nextState;
-        currentMove = {};
-        //--- broadcast
-        my.emitView('transition', transition);
-        my.emitAll('time', time);
-        my.emitAll('state', nextState);
-        //--- continue
-        if (! my.paused)
-        __.sleep(settings.delay)
-            .then(() => my.loop(time + 1));
-    }
-    
     my.start = () => {
         my.paused = false
         //--- create initial state
-        if (!currentState) {
-            let ps = players.map(s => s.player),
-                w0 = settings.initialWeight,
-                nVit = settings.nVitamins;
-            currentState = __.pipe(
-                game.addPlayers(ps, w0),
-                game.addVitamins(nVit)
-            )({});
-        }
+        currentState = currentState || game.newState(
+            players.map(s => s.player),
+            settings.initialWeight,
+            settings.nVitamins
+        );
+
         //--- broadcast
         my.emitAll('msg', '|> starting...');
         my.emitAll('players', players.map(s => s.player));
@@ -183,9 +177,36 @@ let Room = settings => {
 
     my.pause = () => {
         my.paused = true
-        my.emit('msg', '|| game paused.');
+        my.emitAll('msg', '|| game paused.');
     };
 
+    
+    //------ Update ------
+
+    my.update = () => {
+        let pr = game.process(settings.nVitamins);
+        let [nextState, transition] = pr(currentState, currentMove);
+        currentState = nextState;
+        currentMove = {};
+        return transition;
+    };
+
+    //------ Main Loop ------
+    
+    my.loop = (time) => {
+        //... dump current state & move @ time ? 
+        //--- update 
+        let transition = my.update();
+        //--- broadcast
+        my.emitView('transition', transition);
+        my.emitAll('time', time);
+        my.emitAll('state', currentState);
+        //--- continue
+        if (! my.paused)
+        __.sleep(settings.delay)
+            .then(() => my.loop(time + 1));
+    }
+    
     //------ Broadcast ------
 
     my.emit = (...xs) => 

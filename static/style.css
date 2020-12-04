@@ -1,40 +1,61 @@
 body {
-   	background-color: #3e3e3e;
+    background-color: #281f2a;
+
 }
 h1 {
-	color: Grey;
+    color: Grey;
+}
+
+#view { 
+    border: 1px solid #483f4a;
+}
+
+/* Game List */ 
+.game span {
+    padding: 0px 10px;
+    display: inline-block;
+}
+.game span.name {
+    color: #fff;
+    width: 60px;
 }
 
  /* The side navigation menu */
 .sidenav {
-	color:grey;
+    color: #dcc;
     height: 100%; /* 100% Full-height */
+    max-height: 100%;
     width: 0; /* 0 width - change this with JavaScript */
     position: fixed; /* Stay in place */
     z-index: 1; /* Stay on top */
     top: 0; /* Stay at the top */
     left: 0;
-    background-color: #111; /* Black*/
+    background-color: #281f2a; 
+    padding-top: 60px;
+    padding-left: 12px;
+    box-sizing: border-box;
     overflow-x: hidden; /* Disable horizontal scroll */
-    padding-top: 60px; /* Place content 60px from the top */
     transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
 }
 .sidenav p {
-	    font-weight: bold;
-	    padding: 2px 2px 2px 2px;
+    font-weight: bold;
+    padding: 2px 2px 2px 2px;
 
 }
+
+.sidenav h1 {
+    margin: 6px 0px 6px 0px;
+    font-size: 25px;
+    padding: 0px 10px;
+} 
+
 /* The navigation menu links */
 .sidenav a {
-    padding: 8px 8px 8px 32px;
     text-decoration: none;
-    font-size: 25px;
     color: #818181;
     display: block;
     transition: 0.3s;
 }
-
-
 
 /* When you mouse over the navigation links, change their color */
 .sidenav a:hover {
@@ -48,6 +69,26 @@ h1 {
     right: 25px;
     font-size: 36px;
     margin-left: 50px;
+}
+
+.sidenav button {
+    border: 1px solid #655;
+    color: #baa;
+    background-color: #281f2a;
+    margin: 5px;
+    width: 60px;
+    padding: 3px 10px;
+}
+#console {
+    height: 140px;
+    min-height: 60px;
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+#console * {
+    font-family: monospace;
+    font-size: 12px;
+    color: #baa;
 }
 
 /* Style page content - use this if you want to push the page content to the right when you open the side navigation */
@@ -77,3 +118,4 @@ h1 {
   -ms-transform: translate(-50%, -50%);
   transform: translate(-50%, -50%);
 }
+

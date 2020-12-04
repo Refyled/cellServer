@@ -9,7 +9,7 @@ let express = require('express'),
 
 let port = 3031;
 
-app.use('static', express.static('static'));
+app.use('/', express.static('static'));
 
 
 /*------ Cell Server ------ 

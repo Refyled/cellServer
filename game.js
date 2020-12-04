@@ -7,10 +7,14 @@
     Moves = Edge > Cell 
 */ 
 
-let __ = require('lolo'),
+let graph = require('./graph'),
+    __ = require('lolo'),
     _r = __.r;
 
 module.exports = Game;
+
+Game.lattice = size => 
+    Game(graph.lattice(...size));
 
 //------ Cell Operations ------
     
@@ -245,7 +249,7 @@ function Game (graph) {
         return _r.assign(vits)(state);
     };
     
-    //.addVitamins : (Vertex > Cell) -> Int
+    //.countVitamins : (Vertex > Cell) -> Int
     my.countVitamins = state => __.pipe(
         _r.filter(isVitamin),
         _r.keys,
@@ -264,5 +268,29 @@ function Game (graph) {
         return state;
     };
 
+
+    //------ Initial State ------ 
+    
+    //.newState : ([String], Int, Int) -> (Vertex > Cell)
+    my.newState = (ps, w0, nVit) => __.pipe(
+        my.addPlayers(ps, w0),
+        my.addVitamins(nVit)
+    )({});
+
+
+    //------ Process Moves ------ 
+
+    //.process : Int -> (State, Move) -> (State, Transition)
+    my.process = NVit => (s0, m0) => {
+        let m1 = my.legalise(s0)(m0),
+            tr = my.transition(m1),
+            s1 = my.final(tr),
+            nVit = my.countVitamins(s1),
+            dVit = NVit - nVit,
+            s2 = my.addVitamins(dVit)(s1);
+        return [s2, tr];
+    };
+
     return my;
 }
+

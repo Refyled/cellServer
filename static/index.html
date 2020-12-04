@@ -1,54 +1,77 @@
-<script src="/socket.io/socket.io.js"></script>
-<script>
-  var socket = io();
-  socket.emit("coucou","je suis un message");
-</script>
-
 <!DOCTYPE html>
 
  <html>
- 	<head>
- 		<meta charset="UTF-8">
- 		<title>Cells For AI</title>
- 		<script src="/socket.io/socket.io.js"></script>
- 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
- 		<link rel="stylesheet" type="text/css" href="style.css">
- 	</head>
+    <head>
+        <meta charset="UTF-8">
+        <title>Cells For AI</title>
+        <!-- deps -->
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/lolo/bundle.js"></script>
+        <script> let _r = __.r; </script>
+        <script src="https://cdn.jsdelivr.net/npm/domorphic/dist/dom.min.js"></script>
+        <!-- style -->
+        <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" href="layout.css">
+        <!-- Responsive --> 
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+    </head>
 
- 	<body>
- 		
- 		<div id="mySidenav" class="sidenav">
- 			<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+    <body>
+        <!-- Side bar --> 
+        <div id="mySidenav" class="sidenav flex-v tall">
+            
+            <!-- Close --> 
+            <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">
+                &times;
+            </a>
 
- 			<p>Settings</p>
- 
- 		</div>
+            <!-- Games List --> 
+            <h1> <a onclick="getRooms()" href="javascript:void(0)">
+                Games
+            </a> </h1> 
+            <div id="games"></div> 
 
- 			<!-- Use any element to open the sidenav -->
+            <div class="grow"></div> 
+           
+            <div class="flex-h space-b">
+                <button onclick="start()">Start</button>
+                <button onclick="pause()">Pause</button>
+            </div> 
 
- 			<div class="row">
- 				<div class="col-sm-2">
+            <div class="grow"></div>
 
- 					<div onclick="openNav()">
- 						<div class="button"></div>
- 						<div class="button"></div>
- 						<div class="button"></div>
- 					</div> 
+            <!-- Console --> 
+            <h1>Console</h1>
+            <div id="console">
+            </div> 
 
- 					<h1>Live View</h1>
- 					<div id='playersList'></div>
+        </div>
+        
+        <!-- Left Margin --> 
+        <div class="row">
+            <div class="col-sm-2">
+                <!-- Use any element to open the sidenav -->
+                <div onclick="openNav()">
+                    <div class="button"></div>
+                    <div class="button"></div>
+                    <div class="button"></div>
+                </div> 
 
+                <h1>Live View</h1>
+            </div>
+            <div class="col-sm-2"></div>
+        </div>
+        
+        <!-- Game view --> 
+        <div class="center" id="view">
 
-
- 				</div>
- 				
- 				<div class="col-sm-2"></div>
-
- 			</div>
- 			<div class="center">
- 					<canvas id="canvas" width="600" height="600"></canvas>
- 			</div>
- 			<script src="script.js"></script> 
- 			<script src="sidebar.js"></script> 
- 	</body>
- </html> 
+        </div>
+       
+        <!-- Right Margin --> 
+        
+        <!-- scripts -->  
+        <script src="view.js"></script> 
+        <script src="script.js"></script> 
+        <script src="sidebar.js"></script> 
+    </body>
+</html> 
