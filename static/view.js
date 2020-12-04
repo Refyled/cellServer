@@ -4,16 +4,37 @@
  *
  *      <div id="view"> ... </div> 
  *
- *  Replace this file by exporting `viewTransition(t)`
+ *  Replace this file by exporting `view(transition)`
+ *
+ *  N.B. `view.mapColors(players)` is also called at 
+ *  game start. 
  */
 
-let svg = dom('svg', {width: "600px", height: "600px"})
+//--- Colors --- 
+
+view.colors = [
+        [255, 20, 10],
+        [30, 40, 255]
+    ];
+
+view.colormap = {'*': [120, 240, 60]};
+
+view.mapColors = players => players
+    .forEach((p, i) => view.colormap[p] = view.colors[i]);
+
+//--- Svg container ---
+
+view.svg = dom('svg', {width: "600px", height: "600px"})
     .branch([dom('g#transition').place('gCells')])
     .put('#view');
 
-let ioCells = dom.IO.put(svg)();
+//--- IO stream --- 
 
-function viewTransition (trs) {
+view.io = dom.IO.put(view.svg)(); 
+
+//--- Transition --- 
+
+function view (trs) {
 
     let [X, Y] = settings.size,
         [W, H] = [600, 600],
@@ -45,15 +66,13 @@ function viewTransition (trs) {
         __.map(([m, e]) => m)
     )(trs); 
 
-    let color = () => "#f23";
-
     //  cell : CellModel -> Dom
     let cell = dom('rect.cell', {
-        fill        : m => `rgb(${colormap[m.player].join(',')})`,
-        'fill-opacity': m => Math.min(m.weight/10, 1),
         width       : w,
         height      : h,
-        transform: m => `translate(${m.pos[0]}, ${m.pos[1]})`
+        transform   : m => `translate(${m.pos[0]}, ${m.pos[1]})`,
+        fill        : m => `rgb(${view.colormap[m.player].join(',')})`,
+        'fill-opacity': m => Math.min(.25 + m.weight/20, 1)
     })
         .place('cell')
 
@@ -82,15 +101,12 @@ function viewTransition (trs) {
 
     //--- Show initial State ---
 
-    ioCells.return(0)
+    view.io.return(0)
         .bind(dom.IO.replace(group));
 
     //--- Start Loop ---
 
-    ioCells.return(Date.now())
+    view.io.return(Date.now())
         .sleep(ds)
         .bind(loop);
-
 }
-
-

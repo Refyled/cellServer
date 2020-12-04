@@ -1,8 +1,13 @@
 body {
-   	background-color: #281f2a;
+    background-color: #281f2a;
+
 }
 h1 {
-	color: Grey;
+    color: Grey;
+}
+
+#view { 
+    border: 1px solid #483f4a;
 }
 
 /* Game List */ 
@@ -25,7 +30,7 @@ h1 {
     z-index: 1; /* Stay on top */
     top: 0; /* Stay at the top */
     left: 0;
-    background-color: #281f2a; /* Black*/
+    background-color: #281f2a; 
     padding-top: 60px;
     padding-left: 12px;
     box-sizing: border-box;

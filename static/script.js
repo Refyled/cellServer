@@ -1,18 +1,13 @@
 let room = null,
     settings = {},
-    players = [],
-    colormap = {'*': [0, 255, 0]},
-    playerColors = [
-        [255, 0, 2],
-        [0, 0, 255]
-    ];
+    players = [];
 
 let socket = io()
     .on('msg', showMsg)
     .on('settings', stgs => settings = stgs)
     .on('players', getPlayers)
     .on('rooms', showRooms)
-    .on('transition', viewTransition);
+    .on('transition', view);
 
 getRooms();
 
@@ -70,7 +65,5 @@ function showMsg (msg) {
 
 function getPlayers (ps) {
     players = ps;
-    players.forEach((p, i) => {
-        colormap[p] = playerColors[i]
-    });
+    view.mapColors(players);
 }
