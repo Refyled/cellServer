@@ -1,0 +1,46 @@
+.flex-h {
+    display: flex;
+    flex-flow: row;
+}
+.flex-v {
+    display: flex;
+    flex-flow: column;
+}
+
+.grow {
+    flex-grow: 1;
+}
+.wrap {
+    flex-wrap: wrap;
+}
+.stretch {
+    align-items: stretch;
+}
+.flex-center {
+    align-items: center;
+}
+.space {
+    justify-content: space-around;
+}
+
+
+.tall {
+    height: 100%;
+}
+.wide {
+    width: 100%;
+}
+.center {
+    text-align: center;
+}
+.right {
+    text-align: right;
+}
+.left {
+    text-align: left;
+}
+
+
+.hide{
+    display: none;
+}

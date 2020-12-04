@@ -1,4 +1,4 @@
-/*  view.js
+/*  --- view.js ---
  *  
  *  Show game transitions inside: 
  *
@@ -18,7 +18,7 @@ function viewTransition (trs) {
     let [X, Y] = settings.size,
         [W, H] = [600, 600],
         [w, h] = [W/X, H/Y],
-        fps = 10,
+        fps = 2,
         ds = 1/fps,
         T = settings.delay/1000;
 
