@@ -1,5 +1,9 @@
 # Backlog
 
+## Server
+
+- Instance at alumniscup.fun 
+
 ## Room 
 
 - Server able to run players from repo
@@ -25,6 +29,8 @@
 - Display player names, colors, weights
 
 - Fix CSS - height of grid 
+
+- Fix HTML+CSS responsive: sidebar, stats, etc. 
 
 ## Other
 
