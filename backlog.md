@@ -1,7 +1,10 @@
 # Backlog
 
 ## Room 
+
 - Server able to run players from repo
+
+- Show initial state before game start
 
 - End of game event
 
@@ -22,3 +25,15 @@
 - Display player names, colors, weights
 
 - Fix CSS - height of grid 
+
+## Other
+
+- Review script.js namespaces ~ console view
+
+- Review repo structure / front-end modularity (sidebar, etc.)
+
+## Game 
+
+- Correct initial state 
+
+- Add tests for game.process and game.initialState 
